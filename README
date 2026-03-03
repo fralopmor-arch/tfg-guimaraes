@@ -1,10 +1,5 @@
 # TFG - Estado de implementación del método de Guimarães
 
-## Resumen ejecutivo
-
-El proyecto tiene una implementación funcional para estimar parámetros equivalentes y validar magnitudes nominales desde datos de catálogo.
-Sin embargo, todavía no puede afirmarse que el método de Guimarães esté implementado al 100% en sentido estricto del paper.
-
 ## Qué está conseguido actualmente
 
 - Carga y validación estructurada de datos de catálogo (CSV).
