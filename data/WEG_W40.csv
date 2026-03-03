@@ -1,0 +1,2 @@
+motor_id,rated_voltage_v,rated_power_w,frequency_hz,pole_pairs,rated_current_a,rated_torque_nm,efficiency,power_factor,efficiency_class,starting_torque_category,manufacturer,group_id
+WEG_W40_150kW_4P_380V_IE3,380,150000,50,2,270,960,0.955,0.88,IE3,Normal torque (IEC design N),WEG,W40_4P_380V_IE3

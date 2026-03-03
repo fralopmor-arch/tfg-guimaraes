@@ -1,0 +1,20 @@
+# TFG - Estado de implementación del método de Guimarães
+
+## Resumen ejecutivo
+
+El proyecto tiene una implementación funcional para estimar parámetros equivalentes y validar magnitudes nominales desde datos de catálogo.
+Sin embargo, todavía no puede afirmarse que el método de Guimarães esté implementado al 100% en sentido estricto del paper.
+
+## Qué está conseguido actualmente
+
+- Carga y validación estructurada de datos de catálogo (CSV).
+- Agrupación con restricciones coherentes (fabricante, clase de eficiencia y categoría de par de arranque).
+- Estimación de parámetros eléctricos y reproducción de condiciones nominales.
+- Informe automático con errores de corriente, par, eficiencia y factor de potencia.
+
+## Evidencia actual
+
+- Caso WEG_W40_150kW_4P_380V_IE3: validación global PASS.
+- Caso M1: corriente y par nominal se reproducen, pero la eficiencia falla claramente.
+- Interpretación: el ajuste actual puede forzar parámetros físicamente poco plausibles para cerrar par/corriente, penalizando pérdidas.
+

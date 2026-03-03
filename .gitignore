@@ -1,0 +1,11 @@
+.env
+__pycache__/
+*.pyc
+.github/
+.vscode/
+agents/
+AGENTS.md
+.venv/
+guimaraes_info.md
+info_guimaraes/
+scripts/__pycache__
