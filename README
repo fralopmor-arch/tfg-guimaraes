@@ -10,6 +10,53 @@
 ## Evidencia actual
 
 - Caso WEG_W40_150kW_4P_380V_IE3: validación global PASS.
+- CSV adicional válido añadido: data/catalog_weg_ie4_case_3kw_6p_380v.csv (incluye campos nominales y Block III completos).
+- Reporte adicional generado con el mismo flujo de validación: report_weg_ie4_3kw_6p_380v.json.
+- Curvas exportadas para auditoría del caso IE4: outputs/curves/WEG_IE4_50HZ__WEG_IE4_3p0kW_6P_380V_001_curves.csv.
+- Subconjunto IE4 balanceado (30 motores) añadido: data/catalog_weg_ie4_subset_30_balanced.csv (cobertura 2P/4P/6P y bandas de potencia low/medium/high).
+- Reporte agregado del subconjunto IE4 generado con el mismo flujo: report_weg_ie4_subset_30.json.
+- Resumen agregado del subconjunto (WEG_IE4_50HZ): motors=30, mean|I|%=15.153, mean|T|%=1.638, mean|eta|=0.0732, mean|pf|=0.0603, pass_rate=0.000.
+- Dataset IE4 normalizado completo disponible para siguientes corridas: data/catalog_weg_ie4_xls_normalized_full.csv.
 - Caso M1: corriente y par nominal se reproducen, pero la eficiencia falla claramente.
 - Interpretación: el ajuste actual puede forzar parámetros físicamente poco plausibles para cerrar par/corriente, penalizando pérdidas.
+
+## Gestión de outputs de curvas
+
+Para evitar acumular demasiados CSV en `outputs/curves`, usa el script de mantenimiento:
+
+```bash
+c:/Users/fcurr/projects/tfg_guimaraes/.venv/Scripts/python.exe scripts/manage_curve_outputs.py
+```
+
+Comportamiento actual (simplificado):
+- En cada ejecución, archiva todos los `*_curves.csv` en un zip con timestamp en `outputs/curves_archive`.
+- Escribe un manifiesto JSON con el detalle de archivos archivados.
+- Elimina los CSV originales de `outputs/curves` tras crear el zip.
+
+## Extracción de datos (flujo oficial)
+
+El proyecto se ejecuta con 2 extractores manuales. No se usa runner/orquestador.
+
+1. Extractor XLS (catálogo WEG IE4):
+
+```bash
+c:/Users/fcurr/projects/tfg_guimaraes/.venv/Scripts/python.exe scripts/extract_weg_ie4_xls.py
+```
+
+Salida esperada:
+- `data/catalog_weg_ie4_xls_raw_full.csv`
+- `data/catalog_weg_ie4_xls_normalized_full.csv`
+
+2. Extractor Markdown (archivo y rango de páginas seleccionados):
+
+```bash
+c:/Users/fcurr/projects/tfg_guimaraes/.venv/Scripts/python.exe catalog/extract_md_csv.py --file WEG-WMO_w40-motor-eletrico-trifasico-50107009-catalogo-spanish-web.md --start-page 6 --end-page 15
+```
+
+Salida esperada (por defecto):
+- `data/<archivo>__p<start>-<end>_extracted.csv`
+
+Notas:
+- Puedes definir salida personalizada en Markdown con `--output`.
+- Ambos extractores preservan el core de 20 campos Guimarães para validación downstream.
 

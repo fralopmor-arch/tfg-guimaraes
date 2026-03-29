@@ -1,2 +1,0 @@
-motor_id,rated_voltage_v,rated_power_w,frequency_hz,pole_pairs,rated_current_a,rated_torque_nm,efficiency,power_factor,efficiency_class,starting_torque_category,manufacturer,group_id
-M1,400,1500,50,2,3.5,11.5,0.90,0.85,IE3,high,Acme,groupA

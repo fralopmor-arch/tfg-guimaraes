@@ -9,3 +9,6 @@ AGENTS.md
 guimaraes_info.md
 info_guimaraes/
 scripts/__pycache__
+debug_params.txt
+catalog/converter_pdf_md.py
+.archivado/
