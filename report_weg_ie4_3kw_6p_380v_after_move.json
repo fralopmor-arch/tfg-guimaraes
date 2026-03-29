@@ -1,0 +1,67 @@
+{
+  "thresholds": {
+    "current_pct": 15.0,
+    "torque_pct": 15.0,
+    "efficiency_abs": 0.05,
+    "power_factor_abs": 0.05,
+    "ratio_pct": 15.0
+  },
+  "results": [
+    {
+      "group_name": "WEG_IE4_50HZ",
+      "motor_id": "WEG_IE4_3p0kW_6P_380V_001",
+      "predicted_current_a": 11.97847229279522,
+      "nominal_current_a": 7.04,
+      "error_current_pct": 70.148754159023,
+      "pass_current": false,
+      "predicted_torque_nm": 27.273931188692462,
+      "nominal_torque_nm": 29.38245,
+      "error_torque_pct": 7.176116393655181,
+      "pass_torque": true,
+      "predicted_efficiency": 0.6318694079720404,
+      "nominal_efficiency": 0.886,
+      "error_efficiency_abs": 0.2541305920279596,
+      "pass_efficiency": false,
+      "predicted_power_factor": 0.5589951029677372,
+      "nominal_power_factor": 0.73,
+      "error_power_factor_abs": 0.17100489703226274,
+      "pass_power_factor": false,
+      "predicted_ist_in": 5.391643658021022,
+      "nominal_ist_in": 6.3,
+      "error_ist_in_pct": 14.418354634586953,
+      "pass_ist_in": true,
+      "predicted_mst_mn": 1.1104258532317286,
+      "nominal_mst_mn": 2.3,
+      "error_mst_mn_pct": 51.720615076881366,
+      "pass_mst_mn": false,
+      "predicted_mk_mn": 1.2172726004259724,
+      "nominal_mk_mn": 2.6,
+      "error_mk_mn_pct": 53.18182306053952,
+      "pass_mk_mn": false,
+      "predicted_breakdown_slip": 0.058,
+      "nominal_error_pct": 38.66243527633909,
+      "start_error_pct": 33.06948485573416,
+      "breakdown_error_pct": 53.18182306053952,
+      "curve_csv_path": null,
+      "pass_overall": false
+    }
+  ],
+  "summary_by_group": {
+    "WEG_IE4_50HZ": {
+      "motors": 1,
+      "mean_abs_current_error_pct": 70.148754159023,
+      "mean_abs_torque_error_pct": 7.176116393655181,
+      "mean_abs_efficiency_error": 0.2541305920279596,
+      "mean_abs_pf_error": 0.17100489703226274,
+      "mean_abs_ist_in_error_pct": 14.418354634586953,
+      "mean_abs_mst_mn_error_pct": 51.720615076881366,
+      "mean_abs_mk_mn_error_pct": 53.18182306053952,
+      "mean_nominal_error_pct": 38.66243527633909,
+      "mean_start_error_pct": 33.06948485573416,
+      "mean_breakdown_error_pct": 53.18182306053952,
+      "overall_pass_rate": 0.0
+    }
+  },
+  "skipped": [],
+  "overall_pass": false
+}
