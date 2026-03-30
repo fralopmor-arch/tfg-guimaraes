@@ -25,7 +25,7 @@
 Para evitar acumular demasiados CSV en `outputs/curves`, usa el script de mantenimiento:
 
 ```bash
-c:/Users/fcurr/projects/tfg_guimaraes/.venv/Scripts/python.exe scripts/manage_curve_outputs.py
+c:/Users/fcurr/projects/tfg_guimaraes/.venv/Scripts/python.exe scripts/curves/manage_curve_outputs.py
 ```
 
 Comportamiento actual (simplificado):
@@ -35,12 +35,12 @@ Comportamiento actual (simplificado):
 
 ## Extracción de datos (flujo oficial)
 
-El proyecto se puede ejecutar de forma manual (2 extractores) o con un runner unificado.
+El proyecto se ejecuta de forma manual con 2 extractores.
 
 1. Extractor XLS (catálogo WEG IE4):
 
 ```bash
-c:/Users/fcurr/projects/tfg_guimaraes/.venv/Scripts/python.exe scripts/extract_weg_ie4_xls.py
+c:/Users/fcurr/projects/tfg_guimaraes/.venv/Scripts/python.exe catalog/extract_xls_csv.py
 ```
 
 Salida esperada:
@@ -60,12 +60,26 @@ Notas:
 - Puedes definir salida personalizada en Markdown con `--output`.
 - Ambos extractores preservan el core de 20 campos Guimarães para validación downstream.
 
-## Flujo completo en un solo comando
+## Flujo completo en 3 comandos
 
 Para correr extracción XLS + extracción Markdown + validación Guimarães en secuencia:
 
+1. Extracción XLS (raw + normalizado):
+
 ```bash
-c:/Users/fcurr/projects/tfg_guimaraes/.venv/Scripts/python.exe scripts/run_full_flow.py --summary-only
+c:/Users/fcurr/projects/tfg_guimaraes/.venv/Scripts/python.exe catalog/extract_xls_csv.py
+```
+
+2. Extracción Markdown (rango de páginas):
+
+```bash
+c:/Users/fcurr/projects/tfg_guimaraes/.venv/Scripts/python.exe catalog/extract_md_csv.py --file WEG-WMO_w40-motor-eletrico-trifasico-50107009-catalogo-spanish-web.md --start-page 6 --end-page 15
+```
+
+3. Validación Guimarães sobre el CSV extraído:
+
+```bash
+c:/Users/fcurr/projects/tfg_guimaraes/.venv/Scripts/python.exe scripts/guimaraes/validate_guimaraes.py --input data/catalog_weg_w40_open_motor_p6_p15_extracted.csv --summary-only --output report_full_flow.json
 ```
 
 Salida principal:
@@ -74,10 +88,10 @@ Salida principal:
 - `data/catalog_weg_w40_open_motor_p6_p15_extracted.csv`
 - `report_full_flow.json`
 
-Opciones útiles:
-- `--skip-md` para omitir la extracción Markdown.
-- `--validation-input <csv>` para validar otro dataset.
+Opciones útiles (validación):
+- `--compare-with-legacy` para comparación deterministic vs legacy.
 - `--export-curves-dir outputs/curves` para exportar curvas por motor.
+- `--solver deterministic|legacy|auto` para seleccionar el estimador.
 
 ## Particionado por grupos coherentes (nuevo)
 

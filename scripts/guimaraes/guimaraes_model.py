@@ -300,6 +300,8 @@ def solve_deterministic_blocks(record: MotorRecord) -> DeterministicBlockState:
     # Block I (Eq.11-22): resistive calibration.
     xs: list[float] = []
     ys: list[float] = []
+    xs_r2: list[float] = []
+    ys_r2: list[float] = []
     for load_fraction, eta, pf in _block3_efficiency_pf_points(record):
         eta_safe = max(min(eta, 0.9995), 1e-4)
         pf_safe = max(min(pf, 0.9995), 0.05)
@@ -307,10 +309,14 @@ def solve_deterministic_blocks(record: MotorRecord) -> DeterministicBlockState:
         pin = p2 / eta_safe
         i1 = pin / max((math.sqrt(3.0) * record.rated_voltage_v * pf_safe), _EPS)
         slip_i = _slip_from_load_fraction(slip_r, load_fraction)
-        xs.append(3.0 * (i1 ** 2))
+        x_i = 3.0 * (i1 ** 2)
+        xs.append(x_i)
         ys.append(pin - (p2 / max(1.0 - slip_i, _EPS)))
+        xs_r2.append(x_i)
+        ys_r2.append((p2 * slip_i) / max(1.0 - slip_i, _EPS))
 
     r1_fit, prot_fit = _linear_fit(xs, ys)
+    r2_fit, _ = _linear_fit(xs_r2, ys_r2)
     r1 = max(r1_fit, 1e-4)
     prot = max(prot_fit, 1e-3)
 
@@ -318,7 +324,12 @@ def solve_deterministic_blocks(record: MotorRecord) -> DeterministicBlockState:
     pf_100 = record.pf_100 if record.pf_100 is not None else record.power_factor
     phi_100 = math.acos(max(min(pf_100, 0.9995), 0.0))
     r_total = z_rated * math.cos(phi_100)
-    r2_rated = max((r_total - r1) * slip_r, 1e-4)
+
+    # Eq.15 explicit path: r2 is the slope of P2*s/(1-s) versus 3*I1^2.
+    if math.isfinite(r2_fit) and r2_fit > 0.0:
+        r2_rated = max(r2_fit, 1e-4)
+    else:
+        r2_rated = max((r_total - r1) * slip_r, 1e-4)
 
     i_start = i_rated * max(record.ist_in or 1.0, 1.0)
     mst_mn = max(record.mst_mn or 1.0, 1e-4)
