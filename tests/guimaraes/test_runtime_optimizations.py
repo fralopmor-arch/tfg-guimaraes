@@ -132,3 +132,17 @@ def test_mode_runner_parser_defaults_are_iterative_and_quiet() -> None:
     assert args.compare_with_legacy is False
     assert args.legacy_fidelity == "iterative"
     assert args.log_level == "ERROR"
+
+
+def test_mode_runner_parser_accepts_nameplate_solver() -> None:
+    parser = build_parser()
+    args = parser.parse_args([
+        "--input-master",
+        "data/catalog_weg_w22_three_phase_eu_p30_p37_extracted.csv",
+        "--mode",
+        "smoke",
+        "--solver",
+        "deterministic-nameplate",
+    ])
+
+    assert args.solver == "deterministic-nameplate"

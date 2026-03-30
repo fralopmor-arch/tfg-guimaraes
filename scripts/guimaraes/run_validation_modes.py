@@ -417,7 +417,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--solver",
         default="deterministic",
-        choices=["deterministic", "legacy", "auto"],
+        choices=["deterministic", "deterministic-nameplate", "legacy", "auto"],
         help="Estimator used by batch validation",
     )
     parser.add_argument(

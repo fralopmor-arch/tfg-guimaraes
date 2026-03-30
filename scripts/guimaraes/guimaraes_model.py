@@ -278,6 +278,11 @@ def _reference_defaults(record: MotorRecord) -> tuple[float, float, float]:
 
 def normalize_for_typical_curve(parameter_ohm: float, record: MotorRecord, parameter_name: str) -> float:
     exponent_by_name = {
+        "r1": 0.0,
+        "r2": 0.0,
+        "x2": 0.0,
+        "r20": 0.0,
+        "x20": 0.0,
         "rm": _RM_EXPONENT_U,
         "xm": _XM_EXPONENT_U,
         "x1": _X1_EXPONENT_U,
@@ -341,9 +346,9 @@ def solve_deterministic_blocks(record: MotorRecord) -> DeterministicBlockState:
     gr = _gr_from_rated(r2_start, r2_rated, slip_r)
     r2_k = r2_start * math.exp(gr * math.sqrt(max(1.0 - _breakdown_slip_from_ratio(slip_r, record.mk_mn), 0.0)))
 
-    # Keep rotor resistance law monotonic from start -> breakdown -> rated.
-    if r2_rated < r2_start:
-        r2_rated = max(r2_start * 1.05, r2_rated)
+    # Keep rotor resistance physically monotonic: start >= breakdown >= rated.
+    if r2_rated > r2_start:
+        r2_rated = min(r2_start * 0.99, r2_rated)
         gr = _gr_from_rated(r2_start, r2_rated, slip_r)
 
     sk = _breakdown_slip_from_ratio(slip_r, record.mk_mn)
@@ -452,11 +457,140 @@ def estimate_parameters_deterministic(record: MotorRecord) -> EquivalentCircuitP
         _record_performance("solver_deterministic", time.perf_counter() - solver_start)
 
 
+def estimate_parameters_deterministic_nameplate(record: MotorRecord) -> EquivalentCircuitParameters:
+    solver_start = time.perf_counter()
+    try:
+        pole_pairs = record.resolved_pole_pairs
+        slip_r = rated_slip(record)
+        v_phase = _phase_voltage(record.rated_voltage_v)
+        i_rated = max(record.rated_current_a, _EPS)
+        ns = synchronous_speed_rpm(record.frequency_hz, pole_pairs)
+        nr = ns * (1.0 - slip_r)
+        ns_nr = ns / max(nr, _EPS)
+
+        mk_ratio = max(float(record.mk_mn) if record.mk_mn is not None else 2.5, 1.0)
+        sk = _breakdown_slip_from_ratio(slip_r, mk_ratio)
+
+        pf_rated = max(min(record.power_factor, 0.9995), 0.05)
+        i2_rated = i_rated * pf_rated / math.sqrt(max(1.0 + ((slip_r / max(sk, _EPS)) ** 2), _EPS))
+        r2_rated = max(
+            (slip_r / max(1.0 - slip_r, _EPS)) * (record.rated_power_w / max(3.0 * (i2_rated ** 2), _EPS)),
+            1e-4,
+        )
+
+        mk_abs = mk_ratio * record.rated_torque_nm
+        r1 = max(((45.0 * (v_phase ** 2)) / max(math.pi * mk_abs * ns, _EPS)) - (r2_rated / max(sk, _EPS)), 1e-4)
+
+        if record.ist_in is not None and record.mst_mn is not None:
+            i_start = i_rated * max(record.ist_in, 1.0)
+            r2_start = max(
+                (record.rated_power_w * max(record.mst_mn, 1e-4)) / max(3.0 * (i_start ** 2) * ns_nr, _EPS),
+                1e-4,
+            )
+        else:
+            r2_start = max(r2_rated, 1e-4)
+
+        if r2_start < r2_rated:
+            r2_start = max(1.01 * r2_rated, r2_start)
+
+        gr = _gr_from_rated(r2_start, r2_rated, slip_r)
+        r2_k = r2_start * math.exp(gr * math.sqrt(max(1.0 - sk, 0.0)))
+
+        z_rated = v_phase / i_rated
+        phi_rated = math.acos(pf_rated)
+        x_total = max(z_rated * math.sin(phi_rated), 1e-4)
+        x2_k = max(r2_k / max(sk, _EPS), 1e-4)
+
+        if record.mst_mn is not None and record.mst_mn > 0.0 and mk_ratio > 0.0:
+            x2_start_sq = (2.0 * r2_start * x2_k * mk_ratio / max(record.mst_mn, _EPS)) - (r2_start ** 2)
+            x2_start = math.sqrt(max(x2_start_sq, 1e-8))
+        else:
+            x2_start = max(0.5 * x_total, 1e-4)
+
+        den_gx = math.sqrt(max(1.0 - sk, 0.0))
+        if den_gx <= _EPS:
+            gx = 0.0
+        else:
+            gx = math.log(max(x2_k, _EPS) / max(x2_start, _EPS)) / den_gx
+
+        x2_rated = x2_start * math.exp(gx * math.sqrt(max(1.0 - slip_r, 0.0)))
+
+        if record.ist_in is not None and record.ist_in > 0.0:
+            z_start_abs = v_phase / max(i_rated * max(record.ist_in, 1.0), _EPS)
+            x1_sq = (
+                (z_start_abs ** 2)
+                - ((r1 + r2_start) ** 2)
+                - ((x2_start ** 2) / max(1.0 + ((slip_r / max(sk, _EPS)) ** 2), _EPS))
+            )
+            x1 = math.sqrt(max(x1_sq, 1e-8))
+        else:
+            x1 = max(x_total - x2_rated, 1e-4)
+
+        rm_ref, xm_ref, x1_ref = _reference_defaults(record)
+
+        if not math.isfinite(x1) or x1 <= 0.0:
+            x1 = x1_ref
+        if not math.isfinite(r1) or r1 <= 0.0:
+            r1 = max(0.15 * z_rated, 1e-4)
+        if not math.isfinite(gr):
+            gr = 0.0
+        if not math.isfinite(gx):
+            gx = 0.0
+
+        pin_rated = record.rated_power_w / max(record.efficiency, _EPS)
+        prot_eq29 = pin_rated - (record.rated_power_w / max(1.0 - slip_r, _EPS)) - (3.0 * r1 * (i_rated ** 2))
+        e_internal = v_phase - (i_rated * math.sqrt((r1 ** 2) + (x1 ** 2)))
+
+        if e_internal <= _EPS or prot_eq29 <= _EPS:
+            rm = rm_ref
+            xm = xm_ref
+        else:
+            rm = max((3.0 * (e_internal ** 2)) / prot_eq29, 1e-3)
+            i0p = e_internal / max(rm, _EPS)
+            i1q = i_rated * math.sin(phi_rated)
+            i0q_sq = (i1q ** 2) - (i0p ** 2)
+            if i0q_sq <= _EPS:
+                xm = xm_ref
+            else:
+                xm = max(e_internal / math.sqrt(i0q_sq), 1e-4)
+
+        params = EquivalentCircuitParameters(
+            r1_ohm=r1,
+            r2_base_ohm=r2_start,
+            x1_ohm=x1,
+            x2_ohm=x2_start,
+            rm_ohm=rm,
+            xm_ohm=xm,
+            slip_rated=slip_r,
+            gr=gr,
+            gx=gx,
+        )
+
+        LOGGER.info(
+            "Deterministic nameplate solve %s -> r1=%.5f r2s=%.5f x1=%.5f x2s=%.5f rm=%.5f xm=%.5f sR=%.5f sk=%.5f",
+            record.motor_id,
+            params.r1_ohm,
+            params.r2_base_ohm,
+            params.x1_ohm,
+            params.x2_ohm,
+            params.rm_ohm,
+            params.xm_ohm,
+            params.slip_rated,
+            sk,
+        )
+        return params
+    finally:
+        _record_performance("solver_deterministic_nameplate", time.perf_counter() - solver_start)
+
+
 def estimate_parameters(
     record: MotorRecord,
     *,
     legacy_config: LegacyRuntimeConfig | None = None,
 ) -> EquivalentCircuitParameters:
+    if not record.has_block3_targets:
+        return estimate_parameters_deterministic_nameplate(record)
+
     try:
         return estimate_parameters_deterministic(record)
     except Exception as exc:
