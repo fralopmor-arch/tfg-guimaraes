@@ -2,11 +2,13 @@ from __future__ import annotations
 
 import logging
 import math
+import time
 from dataclasses import dataclass
+from typing import Callable
 from typing import Iterable
 
 try:
-    from scripts.catalog_schema import MotorRecord
+    from scripts.guimaraes.catalog_schema import MotorRecord
 except ModuleNotFoundError:  # pragma: no cover - direct script execution
     from catalog_schema import MotorRecord
 
@@ -50,6 +52,57 @@ class CharacteristicPoints:
     nominal: OperatingPoint
     start: OperatingPoint
     breakdown: OperatingPoint
+
+
+@dataclass(frozen=True)
+class DeterministicBlockState:
+    slip_rated: float
+    slip_breakdown: float
+    r1_ohm: float
+    prot_w: float
+    r2_start_ohm: float
+    r2_rated_ohm: float
+    r2_breakdown_ohm: float
+    gr: float
+    x1_ohm: float
+    x2_start_ohm: float
+    x2_breakdown_ohm: float
+    x2_rated_ohm: float
+    gx: float
+    rm_ohm: float
+    xm_ohm: float
+
+
+@dataclass(frozen=True)
+class LegacyRuntimeConfig:
+    breakdown_samples: int = 600
+    beta_min_tenths: int = 8
+    beta_max_tenths: int = 16
+    alpha_min_tenths: int = 1
+    alpha_max_tenths: int = 9
+    r1_steps: int = 31
+    gr_steps: int = 51
+    rm_steps: int = 21
+    xm_steps: int = 31
+
+
+_RM_EXPONENT_U = -0.25
+_XM_EXPONENT_U = 0.333
+_X1_EXPONENT_U = -0.333
+
+_PerformanceHook = Callable[[str, float, int], None]
+_PERFORMANCE_HOOK: _PerformanceHook | None = None
+
+
+def set_performance_hook(hook: _PerformanceHook | None) -> None:
+    global _PERFORMANCE_HOOK
+    _PERFORMANCE_HOOK = hook
+
+
+def _record_performance(stage: str, elapsed_seconds: float, count: int = 1) -> None:
+    if _PERFORMANCE_HOOK is None:
+        return
+    _PERFORMANCE_HOOK(stage, elapsed_seconds, count)
 
 
 def synchronous_speed_rpm(frequency_hz: float, pole_pairs: int) -> float:
@@ -172,7 +225,246 @@ def _gr_from_rated_torque(
     return _gr_from_rated(r2_start, r2_rated, slip_rated)
 
 
-def estimate_parameters(record: MotorRecord) -> EquivalentCircuitParameters:
+def _linear_fit(xs: list[float], ys: list[float]) -> tuple[float, float]:
+    if len(xs) != len(ys) or not xs:
+        raise ValueError("linear fit requires non-empty vectors with equal sizes")
+
+    n = float(len(xs))
+    x_mean = sum(xs) / n
+    y_mean = sum(ys) / n
+    den = sum((x - x_mean) ** 2 for x in xs)
+    if den <= _EPS:
+        return 0.0, y_mean
+
+    num = sum((x - x_mean) * (y - y_mean) for x, y in zip(xs, ys))
+    slope = num / den
+    intercept = y_mean - slope * x_mean
+    return slope, intercept
+
+
+def _block3_efficiency_pf_points(record: MotorRecord) -> list[tuple[float, float, float]]:
+    eff_100 = record.eff_100 if record.eff_100 is not None else record.efficiency
+    pf_100 = record.pf_100 if record.pf_100 is not None else record.power_factor
+    return [
+        (0.50, float(record.eff_50 or eff_100), float(record.pf_50 or pf_100)),
+        (0.75, float(record.eff_75 or eff_100), float(record.pf_75 or pf_100)),
+        (1.00, float(eff_100), float(pf_100)),
+    ]
+
+
+def _slip_from_load_fraction(slip_rated: float, load_fraction: float) -> float:
+    # Eq.13 form with clipping to avoid negative discriminant from noisy data.
+    disc = 1.0 - (4.0 * slip_rated * (1.0 - slip_rated) * load_fraction)
+    disc = max(disc, 0.0)
+    slip = 0.5 * (1.0 - math.sqrt(disc))
+    return max(min(slip, 0.5), 0.001)
+
+
+def _breakdown_slip_from_ratio(slip_rated: float, mk_mn: float | None) -> float:
+    if mk_mn is None or mk_mn <= 1.0:
+        return min(max(3.0 * slip_rated, 0.02), 0.35)
+    root = math.sqrt(max((mk_mn ** 2) - 1.0, 0.0))
+    sk = slip_rated * (mk_mn + root)
+    return min(max(sk, slip_rated + 1e-4), 0.98)
+
+
+def _reference_defaults(record: MotorRecord) -> tuple[float, float, float]:
+    pole_pairs = record.resolved_pole_pairs
+    rm_ref = max(8.0 * reference_impedance(record.rated_voltage_v, pole_pairs, _RM_EXPONENT_U), 1e-3)
+    xm_ref = max(3.0 * reference_impedance(record.rated_voltage_v, pole_pairs, _XM_EXPONENT_U), 1e-4)
+    x1_ref = max(0.25 * reference_impedance(record.rated_voltage_v, pole_pairs, _X1_EXPONENT_U), 1e-4)
+    return rm_ref, xm_ref, x1_ref
+
+
+def normalize_for_typical_curve(parameter_ohm: float, record: MotorRecord, parameter_name: str) -> float:
+    exponent_by_name = {
+        "rm": _RM_EXPONENT_U,
+        "xm": _XM_EXPONENT_U,
+        "x1": _X1_EXPONENT_U,
+    }
+    if parameter_name not in exponent_by_name:
+        raise ValueError(f"Unsupported parameter_name '{parameter_name}' for normalization")
+    z_ref = reference_impedance(record.rated_voltage_v, record.resolved_pole_pairs, exponent_by_name[parameter_name])
+    return parameter_ohm / max(z_ref, _EPS)
+
+
+def solve_deterministic_blocks(record: MotorRecord) -> DeterministicBlockState:
+    pole_pairs = record.resolved_pole_pairs
+    slip_r = rated_slip(record)
+    v_phase = _phase_voltage(record.rated_voltage_v)
+    i_rated = max(record.rated_current_a, _EPS)
+    ns = synchronous_speed_rpm(record.frequency_hz, pole_pairs)
+    nr = ns * (1.0 - slip_r)
+    ns_nr = ns / max(nr, _EPS)
+
+    # Block I (Eq.11-22): resistive calibration.
+    xs: list[float] = []
+    ys: list[float] = []
+    for load_fraction, eta, pf in _block3_efficiency_pf_points(record):
+        eta_safe = max(min(eta, 0.9995), 1e-4)
+        pf_safe = max(min(pf, 0.9995), 0.05)
+        p2 = record.rated_power_w * load_fraction
+        pin = p2 / eta_safe
+        i1 = pin / max((math.sqrt(3.0) * record.rated_voltage_v * pf_safe), _EPS)
+        slip_i = _slip_from_load_fraction(slip_r, load_fraction)
+        xs.append(3.0 * (i1 ** 2))
+        ys.append(pin - (p2 / max(1.0 - slip_i, _EPS)))
+
+    r1_fit, prot_fit = _linear_fit(xs, ys)
+    r1 = max(r1_fit, 1e-4)
+    prot = max(prot_fit, 1e-3)
+
+    z_rated = v_phase / i_rated
+    pf_100 = record.pf_100 if record.pf_100 is not None else record.power_factor
+    phi_100 = math.acos(max(min(pf_100, 0.9995), 0.0))
+    r_total = z_rated * math.cos(phi_100)
+    r2_rated = max((r_total - r1) * slip_r, 1e-4)
+
+    i_start = i_rated * max(record.ist_in or 1.0, 1.0)
+    mst_mn = max(record.mst_mn or 1.0, 1e-4)
+    r2_start = max(
+        (record.rated_power_w * mst_mn) / max(3.0 * (i_start ** 2) * ns_nr, _EPS),
+        1e-4,
+    )
+
+    gr = _gr_from_rated(r2_start, r2_rated, slip_r)
+    r2_k = r2_start * math.exp(gr * math.sqrt(max(1.0 - _breakdown_slip_from_ratio(slip_r, record.mk_mn), 0.0)))
+
+    # Keep rotor resistance law monotonic from start -> breakdown -> rated.
+    if r2_rated < r2_start:
+        r2_rated = max(r2_start * 1.05, r2_rated)
+        gr = _gr_from_rated(r2_start, r2_rated, slip_r)
+
+    sk = _breakdown_slip_from_ratio(slip_r, record.mk_mn)
+    r2_k = r2_start * math.exp(gr * math.sqrt(max(1.0 - sk, 0.0)))
+
+    # Block II (Eq.23-28): reactive calibration.
+    x2_k = max(r2_k / max(sk, _EPS), 1e-4)
+    mk_mn = max(record.mk_mn or 1.0, 1.0)
+    x2_start_sq = (2.0 * r2_start * x2_k * mk_mn / max(mst_mn, _EPS)) - (r2_start ** 2)
+    x2_start = math.sqrt(max(x2_start_sq, 1e-8))
+
+    den_gx = math.sqrt(max(1.0 - sk, 0.0))
+    if den_gx <= _EPS:
+        gx = 0.0
+    else:
+        gx = math.log(max(x2_k, _EPS) / max(x2_start, _EPS)) / den_gx
+
+    x2_rated = x2_start * math.exp(gx * math.sqrt(max(1.0 - slip_r, 0.0)))
+    ist_in = max(record.ist_in or 1.0, 1.0)
+    z_start_abs = v_phase / max(i_rated * ist_in, _EPS)
+    x1_sq = (
+        (z_start_abs ** 2)
+        - ((r1 + r2_start) ** 2)
+        - ((x2_start ** 2) / max(1.0 + ((slip_r / max(sk, _EPS)) ** 2), _EPS))
+    )
+    x1 = math.sqrt(max(x1_sq, 1e-8))
+
+    # Block III (Eq.29-34): magnetizing calibration.
+    pin_rated = record.rated_power_w / max(record.efficiency, _EPS)
+    prot_eq29 = pin_rated - (record.rated_power_w / max(1.0 - slip_r, _EPS)) - (3.0 * r1 * (i_rated ** 2))
+    e_internal = v_phase - (i_rated * math.sqrt((r1 ** 2) + (x1 ** 2)))
+
+    rm_ref, xm_ref, x1_ref = _reference_defaults(record)
+    if e_internal <= _EPS or prot_eq29 <= _EPS:
+        rm = rm_ref
+        xm = xm_ref
+    else:
+        rm = max((3.0 * (e_internal ** 2)) / prot_eq29, 1e-3)
+        i0p = e_internal / max(rm, _EPS)
+        i1q = i_rated * math.sin(phi_100)
+        i0q_sq = (i1q ** 2) - (i0p ** 2)
+        if i0q_sq <= _EPS:
+            xm = xm_ref
+        else:
+            xm = max(e_internal / math.sqrt(i0q_sq), 1e-4)
+
+    # Fallbacks only where deterministic equations are singular/noisy.
+    if not math.isfinite(x1) or x1 <= 0.0:
+        x1 = x1_ref
+    if not math.isfinite(r1) or r1 <= 0.0:
+        r1 = max(0.15 * z_rated, 1e-4)
+    if not math.isfinite(gr):
+        gr = 0.0
+    if not math.isfinite(gx):
+        gx = 0.0
+
+    return DeterministicBlockState(
+        slip_rated=slip_r,
+        slip_breakdown=sk,
+        r1_ohm=r1,
+        prot_w=max(prot_eq29, prot),
+        r2_start_ohm=r2_start,
+        r2_rated_ohm=r2_rated,
+        r2_breakdown_ohm=r2_k,
+        gr=gr,
+        x1_ohm=x1,
+        x2_start_ohm=x2_start,
+        x2_breakdown_ohm=x2_k,
+        x2_rated_ohm=x2_rated,
+        gx=gx,
+        rm_ohm=rm,
+        xm_ohm=xm,
+    )
+
+
+def estimate_parameters_deterministic(record: MotorRecord) -> EquivalentCircuitParameters:
+    solver_start = time.perf_counter()
+    try:
+        state = solve_deterministic_blocks(record)
+        params = EquivalentCircuitParameters(
+            r1_ohm=state.r1_ohm,
+            r2_base_ohm=state.r2_start_ohm,
+            x1_ohm=state.x1_ohm,
+            x2_ohm=state.x2_start_ohm,
+            rm_ohm=state.rm_ohm,
+            xm_ohm=state.xm_ohm,
+            slip_rated=state.slip_rated,
+            gr=state.gr,
+            gx=state.gx,
+        )
+
+        LOGGER.info(
+            "Deterministic solve %s -> r1=%.5f r2s=%.5f x1=%.5f x2s=%.5f rm=%.5f xm=%.5f sR=%.5f sk=%.5f",
+            record.motor_id,
+            params.r1_ohm,
+            state.r2_start_ohm,
+            params.x1_ohm,
+            state.x2_start_ohm,
+            params.rm_ohm,
+            params.xm_ohm,
+            state.slip_rated,
+            state.slip_breakdown,
+        )
+        return params
+    finally:
+        _record_performance("solver_deterministic", time.perf_counter() - solver_start)
+
+
+def estimate_parameters(
+    record: MotorRecord,
+    *,
+    legacy_config: LegacyRuntimeConfig | None = None,
+) -> EquivalentCircuitParameters:
+    try:
+        return estimate_parameters_deterministic(record)
+    except Exception as exc:
+        LOGGER.warning(
+            "Motor %s: deterministic Eq.11-34 chain failed (%s); falling back to legacy estimator",
+            record.motor_id,
+            exc,
+        )
+        return estimate_parameters_legacy(record, runtime_config=legacy_config)
+
+
+def estimate_parameters_legacy(
+    record: MotorRecord,
+    *,
+    runtime_config: LegacyRuntimeConfig | None = None,
+) -> EquivalentCircuitParameters:
+    runtime = runtime_config or LegacyRuntimeConfig()
+    solver_start = time.perf_counter()
+
     pole_pairs = record.resolved_pole_pairs
     slip = rated_slip(record)
     v_phase = _phase_voltage(record.rated_voltage_v)
@@ -257,14 +549,14 @@ def estimate_parameters(record: MotorRecord) -> EquivalentCircuitParameters:
             + 0.5 * (abs((baseline_start.torque_nm / record.rated_torque_nm) - record.mst_mn) / max(record.mst_mn, _EPS) / 0.15)
         )
         if breakdown_target is not None:
-            baseline_breakdown = find_breakdown_point(record, baseline, samples=600)
+            baseline_breakdown = find_breakdown_point(record, baseline, samples=runtime.breakdown_samples)
             best_error += abs(baseline_breakdown.torque_nm - breakdown_target) / max(breakdown_target, _EPS) / 0.15
             best_error += 0.5 * (abs(baseline_breakdown.slip - sk_target) / max(sk_target, 0.02) / 0.25)
 
-        for beta_idx in range(8, 17):
+        for beta_idx in range(runtime.beta_min_tenths, runtime.beta_max_tenths + 1):
             beta = beta_idx / 10.0
             x_start_candidate = x_start_total * beta
-            for alpha_idx in range(1, 10):
+            for alpha_idx in range(runtime.alpha_min_tenths, runtime.alpha_max_tenths + 1):
                 alpha = alpha_idx / 10.0
                 x1 = alpha * x_start_candidate
                 x2_base = (1.0 - alpha) * x_start_candidate
@@ -326,7 +618,7 @@ def estimate_parameters(record: MotorRecord) -> EquivalentCircuitParameters:
                 error += 0.5 * (err_ist_pct / 0.15) + 0.5 * (err_mst_pct / 0.15)
 
                 if breakdown_target is not None:
-                    breakdown_candidate = find_breakdown_point(record, params_candidate, samples=600)
+                    breakdown_candidate = find_breakdown_point(record, params_candidate, samples=runtime.breakdown_samples)
                     err_mk_pct = abs(breakdown_candidate.torque_nm - breakdown_target) / max(breakdown_target, _EPS)
                     error += err_mk_pct / 0.15
                     err_sk = abs(breakdown_candidate.slip - sk_candidate) / max(sk_candidate, 0.02)
@@ -369,8 +661,8 @@ def estimate_parameters(record: MotorRecord) -> EquivalentCircuitParameters:
         pass_mk_count = 0
         pass_all_count = 0
 
-        r1_steps = 31
-        gr_steps = 51
+        r1_steps = max(runtime.r1_steps, 1)
+        gr_steps = max(runtime.gr_steps, 1)
         for r1_idx in range(r1_steps):
             if r1_steps == 1:
                 r1_candidate = r1_min
@@ -415,7 +707,7 @@ def estimate_parameters(record: MotorRecord) -> EquivalentCircuitParameters:
 
                 err_mk = 0.0
                 if breakdown_target is not None:
-                    breakdown_candidate = find_breakdown_point(record, params_candidate, samples=600)
+                    breakdown_candidate = find_breakdown_point(record, params_candidate, samples=runtime.breakdown_samples)
                     if not math.isfinite(breakdown_candidate.torque_nm):
                         continue
                     err_mk = abs((breakdown_candidate.torque_nm / record.rated_torque_nm) - record.mk_mn) / max(record.mk_mn, _EPS)
@@ -504,8 +796,8 @@ def estimate_parameters(record: MotorRecord) -> EquivalentCircuitParameters:
         rm_scale_max = 1.25
         xm_scale_min = 0.04
         xm_scale_max = 1.20
-        rm_steps = 21
-        xm_steps = 31
+        rm_steps = max(runtime.rm_steps, 1)
+        xm_steps = max(runtime.xm_steps, 1)
 
         best_mag_params: tuple[float, float] | None = None
         best_mag_key: tuple[float, float, float] | None = None
@@ -534,7 +826,7 @@ def estimate_parameters(record: MotorRecord) -> EquivalentCircuitParameters:
 
                 rated_candidate = evaluate_operating_point(record, params_candidate, slip)
                 start_candidate = evaluate_operating_point(record, params_candidate, 1.0)
-                breakdown_candidate = find_breakdown_point(record, params_candidate, samples=600)
+                breakdown_candidate = find_breakdown_point(record, params_candidate, samples=runtime.breakdown_samples)
                 if (
                     not math.isfinite(rated_candidate.current_a)
                     or not math.isfinite(rated_candidate.torque_nm)
@@ -626,6 +918,7 @@ def estimate_parameters(record: MotorRecord) -> EquivalentCircuitParameters:
         params.xm_ohm,
         params.slip_rated,
     )
+    _record_performance("solver_legacy", time.perf_counter() - solver_start)
     return params
 
 
@@ -695,12 +988,16 @@ def find_breakdown_point(
     params: EquivalentCircuitParameters,
     samples: int = 2000,
 ) -> OperatingPoint:
+    start = time.perf_counter()
     best_point = evaluate_operating_point(record, params, 0.001)
     for idx in range(1, samples + 1):
         slip = idx / samples
         point = evaluate_operating_point(record, params, slip)
         if point.torque_nm > best_point.torque_nm:
             best_point = point
+    elapsed = time.perf_counter() - start
+    _record_performance("breakdown_search", elapsed)
+    _record_performance("breakdown_search_evaluations", 0.0, count=max(samples, 0))
     return best_point
 
 

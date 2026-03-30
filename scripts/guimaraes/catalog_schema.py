@@ -30,8 +30,10 @@ REQUIRED_BLOCK3_FIELDS: tuple[str, ...] = (
     "mk_mn",
     "eff_50",
     "eff_75",
+    "eff_100",
     "pf_50",
     "pf_75",
+    "pf_100",
 )
 
 BLOCK3_FIELD_ALIASES: dict[str, tuple[str, ...]] = {
@@ -40,8 +42,10 @@ BLOCK3_FIELD_ALIASES: dict[str, tuple[str, ...]] = {
     "mk_mn": ("Mk_Mn", "mk_mn"),
     "eff_50": ("eff_50", "Eff50", "eff50"),
     "eff_75": ("eff_75", "Eff75", "eff75"),
+    "eff_100": ("eff_100", "Eff100", "eff100", "efficiency"),
     "pf_50": ("pf_50", "PF50", "pf50"),
     "pf_75": ("pf_75", "PF75", "pf75"),
+    "pf_100": ("pf_100", "PF100", "pf100", "power_factor"),
 }
 
 OPTIONAL_IDENTIFIER_FIELDS: tuple[str, ...] = (
@@ -71,8 +75,10 @@ class MotorRecord:
     mk_mn: float | None = None
     eff_50: float | None = None
     eff_75: float | None = None
+    eff_100: float | None = None
     pf_50: float | None = None
     pf_75: float | None = None
+    pf_100: float | None = None
 
     @property
     def resolved_pole_pairs(self) -> int:
@@ -85,8 +91,14 @@ class MotorRecord:
         return self.poles // 2
 
     @property
-    def group_key(self) -> tuple[str, str, str]:
-        return (self.manufacturer, self.efficiency_class, self.starting_torque_category)
+    def group_key(self) -> tuple[str, str, str, str, str]:
+        return (
+            self.manufacturer,
+            self.efficiency_class,
+            self.starting_torque_category,
+            f"{self.frequency_hz:.3f}",
+            str(self.resolved_pole_pairs),
+        )
 
     @property
     def has_block3_targets(self) -> bool:
@@ -148,8 +160,10 @@ def motor_record_from_row(row: dict[str, str], row_index: int) -> MotorRecord:
         mk_mn=_to_optional_float_alias(row, BLOCK3_FIELD_ALIASES["mk_mn"]),
         eff_50=_to_optional_float_alias(row, BLOCK3_FIELD_ALIASES["eff_50"]),
         eff_75=_to_optional_float_alias(row, BLOCK3_FIELD_ALIASES["eff_75"]),
+        eff_100=_to_optional_float_alias(row, BLOCK3_FIELD_ALIASES["eff_100"]),
         pf_50=_to_optional_float_alias(row, BLOCK3_FIELD_ALIASES["pf_50"]),
         pf_75=_to_optional_float_alias(row, BLOCK3_FIELD_ALIASES["pf_75"]),
+        pf_100=_to_optional_float_alias(row, BLOCK3_FIELD_ALIASES["pf_100"]),
     )
 
 
@@ -208,6 +222,8 @@ def enforce_grouping_constraints(group_name: str, records: list[MotorRecord]) ->
     manufacturers = {entry.manufacturer for entry in records}
     efficiency_classes = {entry.efficiency_class for entry in records}
     starting_categories = {entry.starting_torque_category for entry in records}
+    frequencies = {round(entry.frequency_hz, 6) for entry in records}
+    pole_pairs = {entry.resolved_pole_pairs for entry in records}
 
     if len(manufacturers) > 1:
         raise ValueError(f"Invalid mixed group '{group_name}': multiple manufacturers")
@@ -215,6 +231,10 @@ def enforce_grouping_constraints(group_name: str, records: list[MotorRecord]) ->
         raise ValueError(f"Invalid mixed group '{group_name}': multiple efficiency classes")
     if len(starting_categories) > 1:
         raise ValueError(f"Invalid mixed group '{group_name}': multiple starting-torque categories")
+    if len(frequencies) > 1:
+        raise ValueError(f"Invalid mixed group '{group_name}': multiple frequencies")
+    if len(pole_pairs) > 1:
+        raise ValueError(f"Invalid mixed group '{group_name}': multiple pole-pair counts")
 
 
 def as_dict(record: MotorRecord) -> dict[str, Any]:
@@ -238,6 +258,8 @@ def as_dict(record: MotorRecord) -> dict[str, Any]:
         "mk_mn": record.mk_mn,
         "eff_50": record.eff_50,
         "eff_75": record.eff_75,
+        "eff_100": record.eff_100,
         "pf_50": record.pf_50,
         "pf_75": record.pf_75,
+        "pf_100": record.pf_100,
     }

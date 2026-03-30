@@ -1,0 +1,913 @@
+{
+  "mode": "smoke",
+  "solver": "deterministic",
+  "compare_with_legacy": true,
+  "input_master": "data/catalog_weg_w40_open_motor_p6_p15_extracted.csv",
+  "source_name": "weg_w40",
+  "partition_manifest": "data/partitions/weg_w40/manifest_smoke.json",
+  "partition_reused": true,
+  "runtime_config": {
+    "legacy_fidelity": "iterative",
+    "legacy_solver": {
+      "breakdown_samples": 140,
+      "beta_min_tenths": 8,
+      "beta_max_tenths": 16,
+      "alpha_min_tenths": 1,
+      "alpha_max_tenths": 9,
+      "r1_steps": 12,
+      "gr_steps": 20,
+      "rm_steps": 8,
+      "xm_steps": 12
+    }
+  },
+  "totals": {
+    "batches": 19,
+    "rows_count": 141,
+    "validated_count": 141,
+    "skipped_count": 0,
+    "pass_count": 0,
+    "overall_pass_rate": 0.0,
+    "overall_pass": false
+  },
+  "timing": {
+    "partition_stage_seconds": 0.003288699997938238,
+    "batch_validation_seconds": 55.70219330000691,
+    "batch_report_write_seconds": 0.08773200002906378,
+    "mode_total_runtime_seconds": 55.796957799990196,
+    "accumulated_stage_seconds": 221.1678600985906,
+    "hotspots": [
+      {
+        "stage": "comparison.wrapper",
+        "seconds": 55.701560099987546,
+        "count": 19,
+        "pct_of_accumulated_stages": 25.185196472560392
+      },
+      {
+        "stage": "legacy.validate_motor",
+        "seconds": 53.88037369999802,
+        "count": 141,
+        "pct_of_accumulated_stages": 24.361755671000125
+      },
+      {
+        "stage": "legacy.breakdown_search",
+        "seconds": 52.40043049886299,
+        "count": 58882,
+        "pct_of_accumulated_stages": 23.6926063649141
+      },
+      {
+        "stage": "legacy.solver_legacy",
+        "seconds": 52.126763000007486,
+        "count": 141,
+        "pct_of_accumulated_stages": 23.56886890200538
+      },
+      {
+        "stage": "validate_motor",
+        "seconds": 1.751176300123916,
+        "count": 141,
+        "pct_of_accumulated_stages": 0.7917860666297939
+      },
+      {
+        "stage": "deterministic.validate_motor",
+        "seconds": 1.751176300123916,
+        "count": 141,
+        "pct_of_accumulated_stages": 0.7917860666297939
+      },
+      {
+        "stage": "breakdown_search",
+        "seconds": 1.7306186999485362,
+        "count": 141,
+        "pct_of_accumulated_stages": 0.7824910451170769
+      },
+      {
+        "stage": "deterministic.breakdown_search",
+        "seconds": 1.7306186999485362,
+        "count": 141,
+        "pct_of_accumulated_stages": 0.7824910451170769
+      },
+      {
+        "stage": "legacy.load_catalog_csv",
+        "seconds": 0.01586929999757558,
+        "count": 19,
+        "pct_of_accumulated_stages": 0.007175228801554385
+      },
+      {
+        "stage": "load_catalog_csv",
+        "seconds": 0.014032700011739507,
+        "count": 19,
+        "pct_of_accumulated_stages": 0.006344818820186672
+      },
+      {
+        "stage": "deterministic.load_catalog_csv",
+        "seconds": 0.014032700011739507,
+        "count": 19,
+        "pct_of_accumulated_stages": 0.006344818820186672
+      },
+      {
+        "stage": "legacy.physical_guards",
+        "seconds": 0.007693000021390617,
+        "count": 141,
+        "pct_of_accumulated_stages": 0.003478353508489564
+      },
+      {
+        "stage": "physical_guards",
+        "seconds": 0.0070572998956777155,
+        "count": 141,
+        "pct_of_accumulated_stages": 0.0031909247087401234
+      },
+      {
+        "stage": "deterministic.physical_guards",
+        "seconds": 0.0070572998956777155,
+        "count": 141,
+        "pct_of_accumulated_stages": 0.0031909247087401234
+      },
+      {
+        "stage": "solver_deterministic",
+        "seconds": 0.006852599894045852,
+        "count": 141,
+        "pct_of_accumulated_stages": 0.0030983705729173984
+      },
+      {
+        "stage": "deterministic.solver_deterministic",
+        "seconds": 0.006852599894045852,
+        "count": 141,
+        "pct_of_accumulated_stages": 0.0030983705729173984
+      },
+      {
+        "stage": "report_generation",
+        "seconds": 0.0031222999677993357,
+        "count": 19,
+        "pct_of_accumulated_stages": 0.0014117331362737333
+      },
+      {
+        "stage": "deterministic.report_generation",
+        "seconds": 0.0031222999677993357,
+        "count": 19,
+        "pct_of_accumulated_stages": 0.0014117331362737333
+      },
+      {
+        "stage": "legacy.report_generation",
+        "seconds": 0.0029830999992555007,
+        "count": 19,
+        "pct_of_accumulated_stages": 0.0013487945300577199
+      },
+      {
+        "stage": "legacy.group_summary",
+        "seconds": 0.0018388000462437049,
+        "count": 19,
+        "pct_of_accumulated_stages": 0.0008314047282566363
+      },
+      {
+        "stage": "group_summary",
+        "seconds": 0.0016919999907258898,
+        "count": 19,
+        "pct_of_accumulated_stages": 0.0007650297787262771
+      },
+      {
+        "stage": "deterministic.group_summary",
+        "seconds": 0.0016919999907258898,
+        "count": 19,
+        "pct_of_accumulated_stages": 0.0007650297787262771
+      },
+      {
+        "stage": "group_constraints",
+        "seconds": 0.0003369999903952703,
+        "count": 19,
+        "pct_of_accumulated_stages": 0.0001523729488746895
+      },
+      {
+        "stage": "deterministic.group_constraints",
+        "seconds": 0.0003369999903952703,
+        "count": 19,
+        "pct_of_accumulated_stages": 0.0001523729488746895
+      },
+      {
+        "stage": "legacy.group_constraints",
+        "seconds": 0.0003121000190731138,
+        "count": 19,
+        "pct_of_accumulated_stages": 0.00014111454482309865
+      },
+      {
+        "stage": "group_records",
+        "seconds": 8.949999755714089e-05,
+        "count": 19,
+        "pct_of_accumulated_stages": 4.0466999824135486e-05
+      },
+      {
+        "stage": "deterministic.group_records",
+        "seconds": 8.949999755714089e-05,
+        "count": 19,
+        "pct_of_accumulated_stages": 4.0466999824135486e-05
+      },
+      {
+        "stage": "legacy.group_records",
+        "seconds": 7.970001024659723e-05,
+        "count": 19,
+        "pct_of_accumulated_stages": 3.603598199623993e-05
+      },
+      {
+        "stage": "breakdown_search_evaluations",
+        "seconds": 0.0,
+        "count": 282000,
+        "pct_of_accumulated_stages": 0.0
+      },
+      {
+        "stage": "deterministic.breakdown_search_evaluations",
+        "seconds": 0.0,
+        "count": 282000,
+        "pct_of_accumulated_stages": 0.0
+      },
+      {
+        "stage": "legacy.breakdown_search_evaluations",
+        "seconds": 0.0,
+        "count": 8505740,
+        "pct_of_accumulated_stages": 0.0
+      }
+    ]
+  },
+  "batch_summaries": [
+    {
+      "batch_index": 1,
+      "partition_csv": "data/partitions/weg_w40/WEG__IE1__Normal_torque_IEC_design_N__50_000Hz__pp1/smoke/batch_001.csv",
+      "report_json": "outputs/validation_perf_after/all_sources_compare/weg_w40/WEG__IE1__Normal_torque_IEC_design_N__50_000Hz__pp1/smoke/batch_001_report.json",
+      "rows_count": 8,
+      "validated_count": 8,
+      "skipped_count": 0,
+      "pass_rate": 0.0,
+      "overall_pass": false,
+      "timing": {
+        "validation_seconds": 3.0026724000053946,
+        "write_report_seconds": 0.0037139999913051724
+      },
+      "comparison_r2": {
+        "deterministic": {
+          "ist_in": 0.7947448864568035,
+          "mst_mn": 0.9433659592001697,
+          "mk_mn": 0.8586169540761324,
+          "rated_torque": 0.8891510140639944,
+          "breakdown_slip": 0.9997228718038301
+        },
+        "legacy": {
+          "ist_in": 0.8344502518574909,
+          "mst_mn": 0.8267055681991538,
+          "mk_mn": 0.9961150729398577,
+          "rated_torque": 0.9999995943735651,
+          "breakdown_slip": 0.9906137504565005
+        }
+      },
+      "comparison_timing": {
+        "deterministic_seconds": 0.10642029999871738,
+        "legacy_seconds": 2.896224099997198,
+        "legacy_vs_deterministic_multiplier": 27.214958988389476,
+        "total_runtime_seconds": 3.002668699991773
+      }
+    },
+    {
+      "batch_index": 2,
+      "partition_csv": "data/partitions/weg_w40/WEG__IE1__Normal_torque_IEC_design_N__50_000Hz__pp2/smoke/batch_001.csv",
+      "report_json": "outputs/validation_perf_after/all_sources_compare/weg_w40/WEG__IE1__Normal_torque_IEC_design_N__50_000Hz__pp2/smoke/batch_001_report.json",
+      "rows_count": 8,
+      "validated_count": 8,
+      "skipped_count": 0,
+      "pass_rate": 0.0,
+      "overall_pass": false,
+      "timing": {
+        "validation_seconds": 3.235394399991492,
+        "write_report_seconds": 0.0070691000000806525
+      },
+      "comparison_r2": {
+        "deterministic": {
+          "ist_in": 0.1086428414146886,
+          "mst_mn": 0.8102406864890359,
+          "mk_mn": 0.8446510100600344,
+          "rated_torque": 0.9945476367045283,
+          "breakdown_slip": 0.99978735368137
+        },
+        "legacy": {
+          "ist_in": 0.11790850442673728,
+          "mst_mn": 0.7689734266793742,
+          "mk_mn": 0.8014158966770657,
+          "rated_torque": 0.9999762007847379,
+          "breakdown_slip": 0.9708326519486201
+        }
+      },
+      "comparison_timing": {
+        "deterministic_seconds": 0.09347779999370687,
+        "legacy_seconds": 3.1418438000109745,
+        "legacy_vs_deterministic_multiplier": 33.610587756905815,
+        "total_runtime_seconds": 3.2353595000022324
+      }
+    },
+    {
+      "batch_index": 3,
+      "partition_csv": "data/partitions/weg_w40/WEG__IE1__Normal_torque_IEC_design_N__60_000Hz__pp1/smoke/batch_001.csv",
+      "report_json": "outputs/validation_perf_after/all_sources_compare/weg_w40/WEG__IE1__Normal_torque_IEC_design_N__60_000Hz__pp1/smoke/batch_001_report.json",
+      "rows_count": 8,
+      "validated_count": 8,
+      "skipped_count": 0,
+      "pass_rate": 0.0,
+      "overall_pass": false,
+      "timing": {
+        "validation_seconds": 3.0920620000106283,
+        "write_report_seconds": 0.006954000011319295
+      },
+      "comparison_r2": {
+        "deterministic": {
+          "ist_in": 0.976706786671689,
+          "mst_mn": 0.9959870927754816,
+          "mk_mn": 0.9679067490962505,
+          "rated_torque": 0.9946497063377417,
+          "breakdown_slip": 0.9735045828144494
+        },
+        "legacy": {
+          "ist_in": 0.7406154049864808,
+          "mst_mn": 0.6302188056923714,
+          "mk_mn": 0.02064067929205582,
+          "rated_torque": 0.9946058878540632,
+          "breakdown_slip": 0.2888027827643489
+        }
+      },
+      "comparison_timing": {
+        "deterministic_seconds": 0.10321190000104252,
+        "legacy_seconds": 2.9888063999969745,
+        "legacy_vs_deterministic_multiplier": 28.957963180280426,
+        "total_runtime_seconds": 3.0920372999971732
+      }
+    },
+    {
+      "batch_index": 4,
+      "partition_csv": "data/partitions/weg_w40/WEG__IE1__Normal_torque_IEC_design_N__60_000Hz__pp2/smoke/batch_001.csv",
+      "report_json": "outputs/validation_perf_after/all_sources_compare/weg_w40/WEG__IE1__Normal_torque_IEC_design_N__60_000Hz__pp2/smoke/batch_001_report.json",
+      "rows_count": 8,
+      "validated_count": 8,
+      "skipped_count": 0,
+      "pass_rate": 0.0,
+      "overall_pass": false,
+      "timing": {
+        "validation_seconds": 3.104012600000715,
+        "write_report_seconds": 0.004490299994358793
+      },
+      "comparison_r2": {
+        "deterministic": {
+          "ist_in": 0.7038907028794046,
+          "mst_mn": 0.9811600976289916,
+          "mk_mn": 0.9549778830974228,
+          "rated_torque": 0.9970650748406787,
+          "breakdown_slip": 0.9636943734830099
+        },
+        "legacy": {
+          "ist_in": 0.47762603757953714,
+          "mst_mn": 0.7923475161122271,
+          "mk_mn": 0.823680438878592,
+          "rated_torque": 0.9996678756644815,
+          "breakdown_slip": 0.8312776794119535
+        }
+      },
+      "comparison_timing": {
+        "deterministic_seconds": 0.10116479999851435,
+        "legacy_seconds": 3.0028011000104016,
+        "legacy_vs_deterministic_multiplier": 29.682271897483105,
+        "total_runtime_seconds": 3.1039870000095107
+      }
+    },
+    {
+      "batch_index": 5,
+      "partition_csv": "data/partitions/weg_w40/WEG__IE2__Normal_torque_IEC_design_N__50_000Hz__pp1/smoke/batch_001.csv",
+      "report_json": "outputs/validation_perf_after/all_sources_compare/weg_w40/WEG__IE2__Normal_torque_IEC_design_N__50_000Hz__pp1/smoke/batch_001_report.json",
+      "rows_count": 8,
+      "validated_count": 8,
+      "skipped_count": 0,
+      "pass_rate": 0.0,
+      "overall_pass": false,
+      "timing": {
+        "validation_seconds": 3.155328400011058,
+        "write_report_seconds": 0.004546099997241981
+      },
+      "comparison_r2": {
+        "deterministic": {
+          "ist_in": 0.557987250090278,
+          "mst_mn": 0.5876309125236808,
+          "mk_mn": 0.6330058505654315,
+          "rated_torque": 0.9561903502614577,
+          "breakdown_slip": 0.9998708478793443
+        },
+        "legacy": {
+          "ist_in": 0.8494750978636101,
+          "mst_mn": 0.7994512646692814,
+          "mk_mn": 0.9984613965323456,
+          "rated_torque": 0.9999999477551889,
+          "breakdown_slip": 0.995157419525549
+        }
+      },
+      "comparison_timing": {
+        "deterministic_seconds": 0.10241229999519419,
+        "legacy_seconds": 3.052859300005366,
+        "legacy_vs_deterministic_multiplier": 29.809498469896926,
+        "total_runtime_seconds": 3.155298199999379
+      }
+    },
+    {
+      "batch_index": 6,
+      "partition_csv": "data/partitions/weg_w40/WEG__IE2__Normal_torque_IEC_design_N__50_000Hz__pp2/smoke/batch_001.csv",
+      "report_json": "outputs/validation_perf_after/all_sources_compare/weg_w40/WEG__IE2__Normal_torque_IEC_design_N__50_000Hz__pp2/smoke/batch_001_report.json",
+      "rows_count": 8,
+      "validated_count": 8,
+      "skipped_count": 0,
+      "pass_rate": 0.0,
+      "overall_pass": false,
+      "timing": {
+        "validation_seconds": 3.143047299992759,
+        "write_report_seconds": 0.004016200007754378
+      },
+      "comparison_r2": {
+        "deterministic": {
+          "ist_in": 0.07757532522694632,
+          "mst_mn": 0.37904976048965133,
+          "mk_mn": 0.3995779849947123,
+          "rated_torque": 0.9910464459511036,
+          "breakdown_slip": 0.9998095273742886
+        },
+        "legacy": {
+          "ist_in": 0.6791741419566824,
+          "mst_mn": 0.8365384450363297,
+          "mk_mn": 0.9967141505849036,
+          "rated_torque": 0.9999999751403693,
+          "breakdown_slip": 0.9808967912421568
+        }
+      },
+      "comparison_timing": {
+        "deterministic_seconds": 0.0998498999979347,
+        "legacy_seconds": 3.043091400002595,
+        "legacy_vs_deterministic_multiplier": 30.476659466514622,
+        "total_runtime_seconds": 3.1429748999944422
+      }
+    },
+    {
+      "batch_index": 7,
+      "partition_csv": "data/partitions/weg_w40/WEG__IE2__Normal_torque_IEC_design_N__50_000Hz__pp3/smoke/batch_001.csv",
+      "report_json": "outputs/validation_perf_after/all_sources_compare/weg_w40/WEG__IE2__Normal_torque_IEC_design_N__50_000Hz__pp3/smoke/batch_001_report.json",
+      "rows_count": 6,
+      "validated_count": 6,
+      "skipped_count": 0,
+      "pass_rate": 0.0,
+      "overall_pass": false,
+      "timing": {
+        "validation_seconds": 2.365425599986338,
+        "write_report_seconds": 0.004786300007253885
+      },
+      "comparison_r2": {
+        "deterministic": {
+          "ist_in": 0.3796769817682646,
+          "mst_mn": 0.4046564358439122,
+          "mk_mn": 0.4259806193678397,
+          "rated_torque": 0.9522251527837057,
+          "breakdown_slip": 0.9999727329911675
+        },
+        "legacy": {
+          "ist_in": 0.8195648272130107,
+          "mst_mn": 0.8424664118254788,
+          "mk_mn": 0.999779628869136,
+          "rated_torque": 0.9999999964591035,
+          "breakdown_slip": 0.9816750265929371
+        }
+      },
+      "comparison_timing": {
+        "deterministic_seconds": 0.07921260000148322,
+        "legacy_seconds": 2.286161100011668,
+        "legacy_vs_deterministic_multiplier": 28.861078918869733,
+        "total_runtime_seconds": 2.3653915999893798
+      }
+    },
+    {
+      "batch_index": 8,
+      "partition_csv": "data/partitions/weg_w40/WEG__IE2__Normal_torque_IEC_design_N__60_000Hz__pp1/smoke/batch_001.csv",
+      "report_json": "outputs/validation_perf_after/all_sources_compare/weg_w40/WEG__IE2__Normal_torque_IEC_design_N__60_000Hz__pp1/smoke/batch_001_report.json",
+      "rows_count": 8,
+      "validated_count": 8,
+      "skipped_count": 0,
+      "pass_rate": 0.0,
+      "overall_pass": false,
+      "timing": {
+        "validation_seconds": 3.0611148000025423,
+        "write_report_seconds": 0.0035146000009262934
+      },
+      "comparison_r2": {
+        "deterministic": {
+          "ist_in": 0.9702917028207556,
+          "mst_mn": 0.9924367998303756,
+          "mk_mn": 0.9881613536472983,
+          "rated_torque": 0.9975061182619294,
+          "breakdown_slip": 0.9332689142498987
+        },
+        "legacy": {
+          "ist_in": 0.7210486186093956,
+          "mst_mn": 0.7893785002578021,
+          "mk_mn": 0.31463005002297206,
+          "rated_torque": 0.9976567375064165,
+          "breakdown_slip": 0.38403033987422597
+        }
+      },
+      "comparison_timing": {
+        "deterministic_seconds": 0.09766679999302141,
+        "legacy_seconds": 2.9633915000013076,
+        "legacy_vs_deterministic_multiplier": 30.3418510713267,
+        "total_runtime_seconds": 3.061081199994078
+      }
+    },
+    {
+      "batch_index": 9,
+      "partition_csv": "data/partitions/weg_w40/WEG__IE2__Normal_torque_IEC_design_N__60_000Hz__pp2/smoke/batch_001.csv",
+      "report_json": "outputs/validation_perf_after/all_sources_compare/weg_w40/WEG__IE2__Normal_torque_IEC_design_N__60_000Hz__pp2/smoke/batch_001_report.json",
+      "rows_count": 8,
+      "validated_count": 8,
+      "skipped_count": 0,
+      "pass_rate": 0.0,
+      "overall_pass": false,
+      "timing": {
+        "validation_seconds": 3.2141623999923468,
+        "write_report_seconds": 0.004581299988785759
+      },
+      "comparison_r2": {
+        "deterministic": {
+          "ist_in": 0.8206332578975801,
+          "mst_mn": 0.966231219094438,
+          "mk_mn": 0.9196609718825051,
+          "rated_torque": 0.9979197338853562,
+          "breakdown_slip": 0.926146697601506
+        },
+        "legacy": {
+          "ist_in": 0.2766632508067912,
+          "mst_mn": 0.4424522497800568,
+          "mk_mn": 0.6120788601305956,
+          "rated_torque": 0.9994658791194037,
+          "breakdown_slip": 0.31759206684716024
+        }
+      },
+      "comparison_timing": {
+        "deterministic_seconds": 0.10603419999824837,
+        "legacy_seconds": 3.1080817000038223,
+        "legacy_vs_deterministic_multiplier": 29.312068182295583,
+        "total_runtime_seconds": 3.2141371999896364
+      }
+    },
+    {
+      "batch_index": 10,
+      "partition_csv": "data/partitions/weg_w40/WEG__IE2__Normal_torque_IEC_design_N__60_000Hz__pp3/smoke/batch_001.csv",
+      "report_json": "outputs/validation_perf_after/all_sources_compare/weg_w40/WEG__IE2__Normal_torque_IEC_design_N__60_000Hz__pp3/smoke/batch_001_report.json",
+      "rows_count": 1,
+      "validated_count": 1,
+      "skipped_count": 0,
+      "pass_rate": 0.0,
+      "overall_pass": false,
+      "timing": {
+        "validation_seconds": 0.40939240000443533,
+        "write_report_seconds": 0.0034725000004982576
+      },
+      "comparison_r2": {
+        "deterministic": {
+          "ist_in": 1.0,
+          "mst_mn": 1.0,
+          "mk_mn": 1.0,
+          "rated_torque": 1.0,
+          "breakdown_slip": 1.0
+        },
+        "legacy": {
+          "ist_in": 1.0,
+          "mst_mn": 1.0,
+          "mk_mn": 1.0,
+          "rated_torque": 1.0,
+          "breakdown_slip": 1.0
+        }
+      },
+      "comparison_timing": {
+        "deterministic_seconds": 0.01287380000576377,
+        "legacy_seconds": 0.3964741999952821,
+        "legacy_vs_deterministic_multiplier": 30.796983005621914,
+        "total_runtime_seconds": 0.40936070001043845
+      }
+    },
+    {
+      "batch_index": 11,
+      "partition_csv": "data/partitions/weg_w40/WEG__IE3__Normal_torque_IEC_design_N__50_000Hz__pp1/smoke/batch_001.csv",
+      "report_json": "outputs/validation_perf_after/all_sources_compare/weg_w40/WEG__IE3__Normal_torque_IEC_design_N__50_000Hz__pp1/smoke/batch_001_report.json",
+      "rows_count": 8,
+      "validated_count": 8,
+      "skipped_count": 0,
+      "pass_rate": 0.0,
+      "overall_pass": false,
+      "timing": {
+        "validation_seconds": 3.1235669999878155,
+        "write_report_seconds": 0.0067943999893032014
+      },
+      "comparison_r2": {
+        "deterministic": {
+          "ist_in": 0.6448608649606993,
+          "mst_mn": 0.7361394514715648,
+          "mk_mn": 0.8286946036600089,
+          "rated_torque": 0.8877760869360498,
+          "breakdown_slip": 0.9999024616579925
+        },
+        "legacy": {
+          "ist_in": 0.8469434243818771,
+          "mst_mn": 0.8136322231767685,
+          "mk_mn": 0.9990768645373154,
+          "rated_torque": 0.9999999579608116,
+          "breakdown_slip": 0.9963817426932502
+        }
+      },
+      "comparison_timing": {
+        "deterministic_seconds": 0.10159540000313427,
+        "legacy_seconds": 3.021938300007605,
+        "legacy_vs_deterministic_multiplier": 29.74483391880318,
+        "total_runtime_seconds": 3.1235528999968665
+      }
+    },
+    {
+      "batch_index": 12,
+      "partition_csv": "data/partitions/weg_w40/WEG__IE3__Normal_torque_IEC_design_N__50_000Hz__pp2/smoke/batch_001.csv",
+      "report_json": "outputs/validation_perf_after/all_sources_compare/weg_w40/WEG__IE3__Normal_torque_IEC_design_N__50_000Hz__pp2/smoke/batch_001_report.json",
+      "rows_count": 8,
+      "validated_count": 8,
+      "skipped_count": 0,
+      "pass_rate": 0.0,
+      "overall_pass": false,
+      "timing": {
+        "validation_seconds": 3.113371100000222,
+        "write_report_seconds": 0.004111000002012588
+      },
+      "comparison_r2": {
+        "deterministic": {
+          "ist_in": 0.07835625313525696,
+          "mst_mn": 0.687172825418016,
+          "mk_mn": 0.8386618055131871,
+          "rated_torque": 0.8004610345069492,
+          "breakdown_slip": 0.9997628220387591
+        },
+        "legacy": {
+          "ist_in": 0.5922604207599524,
+          "mst_mn": 0.5716716347759037,
+          "mk_mn": 0.996443382376774,
+          "rated_torque": 0.99999998826911,
+          "breakdown_slip": 0.9986553531638848
+        }
+      },
+      "comparison_timing": {
+        "deterministic_seconds": 0.10045379999792203,
+        "legacy_seconds": 3.0128220000042347,
+        "legacy_vs_deterministic_multiplier": 29.992115779259294,
+        "total_runtime_seconds": 3.1133101000013994
+      }
+    },
+    {
+      "batch_index": 13,
+      "partition_csv": "data/partitions/weg_w40/WEG__IE3__Normal_torque_IEC_design_N__50_000Hz__pp3/smoke/batch_001.csv",
+      "report_json": "outputs/validation_perf_after/all_sources_compare/weg_w40/WEG__IE3__Normal_torque_IEC_design_N__50_000Hz__pp3/smoke/batch_001_report.json",
+      "rows_count": 6,
+      "validated_count": 6,
+      "skipped_count": 0,
+      "pass_rate": 0.0,
+      "overall_pass": false,
+      "timing": {
+        "validation_seconds": 2.3430538000102388,
+        "write_report_seconds": 0.005584800004726276
+      },
+      "comparison_r2": {
+        "deterministic": {
+          "ist_in": 0.4016828812987725,
+          "mst_mn": 0.02537123718583134,
+          "mk_mn": 0.172377147299966,
+          "rated_torque": 0.9544426087586757,
+          "breakdown_slip": 0.9998862884264623
+        },
+        "legacy": {
+          "ist_in": 0.7280552470886563,
+          "mst_mn": 0.541298737012603,
+          "mk_mn": 0.9993869695424071,
+          "rated_torque": 0.9999999856328524,
+          "breakdown_slip": 0.9694568895354946
+        }
+      },
+      "comparison_timing": {
+        "deterministic_seconds": 0.07616779999807477,
+        "legacy_seconds": 2.266795900010038,
+        "legacy_vs_deterministic_multiplier": 29.760553673170737,
+        "total_runtime_seconds": 2.342990600009216
+      }
+    },
+    {
+      "batch_index": 14,
+      "partition_csv": "data/partitions/weg_w40/WEG__IE3__Normal_torque_IEC_design_N__60_000Hz__pp1/smoke/batch_001.csv",
+      "report_json": "outputs/validation_perf_after/all_sources_compare/weg_w40/WEG__IE3__Normal_torque_IEC_design_N__60_000Hz__pp1/smoke/batch_001_report.json",
+      "rows_count": 8,
+      "validated_count": 8,
+      "skipped_count": 0,
+      "pass_rate": 0.0,
+      "overall_pass": false,
+      "timing": {
+        "validation_seconds": 3.2371099000010872,
+        "write_report_seconds": 0.004552500002318993
+      },
+      "comparison_r2": {
+        "deterministic": {
+          "ist_in": 0.8996985894793119,
+          "mst_mn": 0.9299035854617168,
+          "mk_mn": 0.9576006935132495,
+          "rated_torque": 0.9400095648875331,
+          "breakdown_slip": 0.9999772222307939
+        },
+        "legacy": {
+          "ist_in": 0.9599422712632915,
+          "mst_mn": 0.9703221031905965,
+          "mk_mn": 0.999580196104462,
+          "rated_torque": 0.9999999673042068,
+          "breakdown_slip": 0.9987618621003325
+        }
+      },
+      "comparison_timing": {
+        "deterministic_seconds": 0.09801260000676848,
+        "legacy_seconds": 3.139056400003028,
+        "legacy_vs_deterministic_multiplier": 32.0270699867798,
+        "total_runtime_seconds": 3.2370890000020154
+      }
+    },
+    {
+      "batch_index": 15,
+      "partition_csv": "data/partitions/weg_w40/WEG__IE3__Normal_torque_IEC_design_N__60_000Hz__pp2/smoke/batch_001.csv",
+      "report_json": "outputs/validation_perf_after/all_sources_compare/weg_w40/WEG__IE3__Normal_torque_IEC_design_N__60_000Hz__pp2/smoke/batch_001_report.json",
+      "rows_count": 8,
+      "validated_count": 8,
+      "skipped_count": 0,
+      "pass_rate": 0.0,
+      "overall_pass": false,
+      "timing": {
+        "validation_seconds": 3.2734944999974687,
+        "write_report_seconds": 0.0035930000012740493
+      },
+      "comparison_r2": {
+        "deterministic": {
+          "ist_in": 0.31782270038945026,
+          "mst_mn": 0.29498415477112916,
+          "mk_mn": 0.26289121527450743,
+          "rated_torque": 0.9823271826790888,
+          "breakdown_slip": 0.9997959252860221
+        },
+        "legacy": {
+          "ist_in": 0.6117926807970153,
+          "mst_mn": 0.6087588541828486,
+          "mk_mn": 0.09507261553032309,
+          "rated_torque": 0.9999999041362421,
+          "breakdown_slip": 0.3952794954342055
+        }
+      },
+      "comparison_timing": {
+        "deterministic_seconds": 0.10376589999941643,
+        "legacy_seconds": 3.169688699999824,
+        "legacy_vs_deterministic_multiplier": 30.5465350372102,
+        "total_runtime_seconds": 3.2734742000029655
+      }
+    },
+    {
+      "batch_index": 16,
+      "partition_csv": "data/partitions/weg_w40/WEG__IE4__Normal_torque_IEC_design_N__50_000Hz__pp1/smoke/batch_001.csv",
+      "report_json": "outputs/validation_perf_after/all_sources_compare/weg_w40/WEG__IE4__Normal_torque_IEC_design_N__50_000Hz__pp1/smoke/batch_001_report.json",
+      "rows_count": 8,
+      "validated_count": 8,
+      "skipped_count": 0,
+      "pass_rate": 0.0,
+      "overall_pass": false,
+      "timing": {
+        "validation_seconds": 3.2118441999919014,
+        "write_report_seconds": 0.003259100005379878
+      },
+      "comparison_r2": {
+        "deterministic": {
+          "ist_in": 0.40268942018347365,
+          "mst_mn": 0.7350162852089366,
+          "mk_mn": 0.3035791817278318,
+          "rated_torque": 0.9783062741192025,
+          "breakdown_slip": 0.9999857700235038
+        },
+        "legacy": {
+          "ist_in": 0.8916244568701464,
+          "mst_mn": 0.9676382369613451,
+          "mk_mn": 0.999785623126813,
+          "rated_torque": 0.9999998742686125,
+          "breakdown_slip": 0.9938208458609278
+        }
+      },
+      "comparison_timing": {
+        "deterministic_seconds": 0.10128600000462029,
+        "legacy_seconds": 3.1104992000036873,
+        "legacy_vs_deterministic_multiplier": 30.710060619056907,
+        "total_runtime_seconds": 3.2118083000095794
+      }
+    },
+    {
+      "batch_index": 17,
+      "partition_csv": "data/partitions/weg_w40/WEG__IE4__Normal_torque_IEC_design_N__50_000Hz__pp2/smoke/batch_001.csv",
+      "report_json": "outputs/validation_perf_after/all_sources_compare/weg_w40/WEG__IE4__Normal_torque_IEC_design_N__50_000Hz__pp2/smoke/batch_001_report.json",
+      "rows_count": 8,
+      "validated_count": 8,
+      "skipped_count": 0,
+      "pass_rate": 0.0,
+      "overall_pass": false,
+      "timing": {
+        "validation_seconds": 3.2173952000011923,
+        "write_report_seconds": 0.0044766000064555556
+      },
+      "comparison_r2": {
+        "deterministic": {
+          "ist_in": 0.16867800696529733,
+          "mst_mn": 0.6269635740465747,
+          "mk_mn": 0.13575540939233888,
+          "rated_torque": 0.9931308413503604,
+          "breakdown_slip": 0.9999334044196122
+        },
+        "legacy": {
+          "ist_in": 0.0688796108098707,
+          "mst_mn": 0.9440820333553904,
+          "mk_mn": 0.9994404138617264,
+          "rated_torque": 0.9999997111841368,
+          "breakdown_slip": 0.9892216956967196
+        }
+      },
+      "comparison_timing": {
+        "deterministic_seconds": 0.10299850000592414,
+        "legacy_seconds": 3.1143543000071077,
+        "legacy_vs_deterministic_multiplier": 30.236889855949165,
+        "total_runtime_seconds": 3.217374199986807
+      }
+    },
+    {
+      "batch_index": 18,
+      "partition_csv": "data/partitions/weg_w40/WEG__IE4__Normal_torque_IEC_design_N__60_000Hz__pp1/smoke/batch_001.csv",
+      "report_json": "outputs/validation_perf_after/all_sources_compare/weg_w40/WEG__IE4__Normal_torque_IEC_design_N__60_000Hz__pp1/smoke/batch_001_report.json",
+      "rows_count": 8,
+      "validated_count": 8,
+      "skipped_count": 0,
+      "pass_rate": 0.0,
+      "overall_pass": false,
+      "timing": {
+        "validation_seconds": 3.19510780001292,
+        "write_report_seconds": 0.004480600007809699
+      },
+      "comparison_r2": {
+        "deterministic": {
+          "ist_in": 0.6915208401283512,
+          "mst_mn": 0.9684794904869696,
+          "mk_mn": 0.8822594043719658,
+          "rated_torque": 0.8824925772863584,
+          "breakdown_slip": 0.9987393443524065
+        },
+        "legacy": {
+          "ist_in": 0.9111667410672011,
+          "mst_mn": 0.9854623431199621,
+          "mk_mn": 0.9588715543906737,
+          "rated_torque": 0.9999997477852899,
+          "breakdown_slip": 0.878878525904942
+        }
+      },
+      "comparison_timing": {
+        "deterministic_seconds": 0.10066319999168627,
+        "legacy_seconds": 3.094400600006338,
+        "legacy_vs_deterministic_multiplier": 30.740137411307245,
+        "total_runtime_seconds": 3.1950829999987036
+      }
+    },
+    {
+      "batch_index": 19,
+      "partition_csv": "data/partitions/weg_w40/WEG__IE4__Normal_torque_IEC_design_N__60_000Hz__pp2/smoke/batch_001.csv",
+      "report_json": "outputs/validation_perf_after/all_sources_compare/weg_w40/WEG__IE4__Normal_torque_IEC_design_N__60_000Hz__pp2/smoke/batch_001_report.json",
+      "rows_count": 8,
+      "validated_count": 8,
+      "skipped_count": 0,
+      "pass_rate": 0.0,
+      "overall_pass": false,
+      "timing": {
+        "validation_seconds": 3.2046375000063563,
+        "write_report_seconds": 0.003735600010259077
+      },
+      "comparison_r2": {
+        "deterministic": {
+          "ist_in": 0.8700971207686573,
+          "mst_mn": 0.9854442579373662,
+          "mk_mn": 0.94313584014346,
+          "rated_torque": 0.89329030005383,
+          "breakdown_slip": 0.9989596482922989
+        },
+        "legacy": {
+          "ist_in": 0.8894566770520596,
+          "mst_mn": 0.9801976522759922,
+          "mk_mn": 0.9751531402633175,
+          "rated_torque": 0.9999317057538918,
+          "breakdown_slip": 0.9995844305568606
+        }
+      },
+      "comparison_timing": {
+        "deterministic_seconds": 0.09925130000920035,
+        "legacy_seconds": 3.1052969000011217,
+        "legacy_vs_deterministic_multiplier": 31.287216386216286,
+        "total_runtime_seconds": 3.20458150000195
+      }
+    }
+  ]
+}
