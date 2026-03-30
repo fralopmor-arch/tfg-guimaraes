@@ -1,0 +1,630 @@
+{
+  "comparison": {
+    "mean_errors": {
+      "current_pct": {
+        "deterministic": 23.125847426384258,
+        "legacy": 243.99099626782674
+      },
+      "torque_pct": {
+        "deterministic": 16.457046240589396,
+        "legacy": 39.080838530281646
+      },
+      "efficiency_abs": {
+        "deterministic": 0.009982651126441477,
+        "legacy": 0.5881495555642924
+      },
+      "power_factor_abs": {
+        "deterministic": 0.024634717325073885,
+        "legacy": 0.016326286947431656
+      }
+    },
+    "pass_rate": {
+      "deterministic": 0.0,
+      "legacy": 0.0
+    },
+    "regression_r2": {
+      "deterministic": {
+        "ist_in": 1.0,
+        "mst_mn": 0.0,
+        "mk_mn": 1.0,
+        "rated_torque": 1.0,
+        "breakdown_slip": 1.0
+      },
+      "legacy": {
+        "ist_in": 1.0,
+        "mst_mn": 0.0,
+        "mk_mn": 1.0,
+        "rated_torque": 1.0,
+        "breakdown_slip": 1.0
+      }
+    }
+  },
+  "timing": {
+    "deterministic_seconds": 0.024203499997383915,
+    "legacy_seconds": 0.7403603000129806,
+    "legacy_vs_deterministic_multiplier": 30.588976804718488,
+    "total_runtime_seconds": 0.7645768000074895
+  },
+  "deterministic": {
+    "solver": "deterministic",
+    "thresholds": {
+      "current_pct": 15.0,
+      "torque_pct": 15.0,
+      "efficiency_abs": 0.05,
+      "power_factor_abs": 0.05,
+      "ratio_pct": 15.0
+    },
+    "runtime_config": {
+      "legacy_solver": {
+        "breakdown_samples": 140,
+        "beta_min_tenths": 8,
+        "beta_max_tenths": 16,
+        "alpha_min_tenths": 1,
+        "alpha_max_tenths": 9,
+        "r1_steps": 12,
+        "gr_steps": 20,
+        "rm_steps": 8,
+        "xm_steps": 12
+      }
+    },
+    "results": [
+      {
+        "solver": "deterministic",
+        "group_name": "WEG_IE3_60HZ",
+        "motor_id": "WEG_IE3_0p4kW_8P_220V_226",
+        "rated_power_kw": 0.37,
+        "predicted_current_a": 2.823398757604135,
+        "nominal_current_a": 2.24,
+        "error_current_pct": 26.04458739304173,
+        "pass_current": false,
+        "predicted_torque_nm": 5.134952799990887,
+        "nominal_torque_nm": 4.20705,
+        "error_torque_pct": 22.055901403379742,
+        "pass_torque": false,
+        "predicted_efficiency": 0.7189415784092377,
+        "nominal_efficiency": 0.72,
+        "error_efficiency_abs": 0.001058421590762304,
+        "pass_efficiency": true,
+        "predicted_power_factor": 0.583863569717619,
+        "nominal_power_factor": 0.6,
+        "error_power_factor_abs": 0.016136430282380987,
+        "pass_power_factor": true,
+        "predicted_ist_in": 2.6968975855295247,
+        "nominal_ist_in": 3.4,
+        "error_ist_in_pct": 20.679482778543388,
+        "pass_ist_in": false,
+        "predicted_mst_mn": 0.6634540829429275,
+        "nominal_mst_mn": 1.7,
+        "error_mst_mn_pct": 60.97328923865132,
+        "pass_mst_mn": false,
+        "predicted_mk_mn": 1.6680012833762914,
+        "nominal_mk_mn": 2.3,
+        "error_mk_mn_pct": 27.478205070596022,
+        "pass_mk_mn": false,
+        "predicted_breakdown_slip": 0.162,
+        "nominal_breakdown_slip": 0.29220308886272056,
+        "error_breakdown_slip_pct": 44.559107629382744,
+        "pass_breakdown_slip": false,
+        "normalized_rm": 59.17129289258682,
+        "normalized_xm": 23.13870642972933,
+        "normalized_x1": 1.1998860320204645,
+        "nominal_error_pct": 24.050244398210737,
+        "start_error_pct": 40.82638600859735,
+        "breakdown_error_pct": 27.478205070596022,
+        "curve_csv_path": null,
+        "pass_overall": false
+      },
+      {
+        "solver": "deterministic",
+        "group_name": "WEG_IE3_60HZ",
+        "motor_id": "WEG_IE3_0p6kW_8P_220V_227",
+        "rated_power_kw": 0.55,
+        "predicted_current_a": 3.8466274387112573,
+        "nominal_current_a": 3.2,
+        "error_current_pct": 20.207107459726785,
+        "pass_current": false,
+        "predicted_torque_nm": 6.8707689666198295,
+        "nominal_torque_nm": 6.1978,
+        "error_torque_pct": 10.85819107779905,
+        "pass_torque": true,
+        "predicted_efficiency": 0.7210931193378793,
+        "nominal_efficiency": 0.74,
+        "error_efficiency_abs": 0.01890688066212065,
+        "pass_efficiency": true,
+        "predicted_power_factor": 0.5768669956322332,
+        "nominal_power_factor": 0.61,
+        "error_power_factor_abs": 0.03313300436776678,
+        "pass_power_factor": true,
+        "predicted_ist_in": 2.832752904763564,
+        "nominal_ist_in": 3.5,
+        "error_ist_in_pct": 19.064202721041035,
+        "pass_ist_in": false,
+        "predicted_mst_mn": 0.6982588853679154,
+        "nominal_mst_mn": 1.7,
+        "error_mst_mn_pct": 58.9259479195344,
+        "pass_mst_mn": false,
+        "predicted_mk_mn": 1.5135646239680052,
+        "nominal_mk_mn": 2.0,
+        "error_mk_mn_pct": 24.32176880159974,
+        "pass_mk_mn": false,
+        "predicted_breakdown_slip": 0.1435,
+        "nominal_breakdown_slip": 0.21805246792063954,
+        "error_breakdown_slip_pct": 34.1901509446676,
+        "pass_breakdown_slip": false,
+        "normalized_rm": 64.65636204031352,
+        "normalized_xm": 16.847844899167313,
+        "normalized_x1": 0.6963234872909031,
+        "nominal_error_pct": 15.532649268762917,
+        "start_error_pct": 38.99507532028772,
+        "breakdown_error_pct": 24.32176880159974,
+        "curve_csv_path": null,
+        "pass_overall": false
+      }
+    ],
+    "summary_by_group": {
+      "WEG_IE3_60HZ": {
+        "motors": 2,
+        "mean_abs_current_error_pct": 23.125847426384258,
+        "mean_abs_torque_error_pct": 16.457046240589396,
+        "mean_abs_efficiency_error": 0.009982651126441477,
+        "mean_abs_pf_error": 0.024634717325073885,
+        "mean_abs_ist_in_error_pct": 19.87184274979221,
+        "mean_abs_mst_mn_error_pct": 59.949618579092856,
+        "mean_abs_mk_mn_error_pct": 25.899986936097882,
+        "mean_abs_breakdown_slip_error_pct": 39.37462928702517,
+        "mean_nominal_error_pct": 19.791446833486827,
+        "mean_start_error_pct": 39.91073066444254,
+        "mean_breakdown_error_pct": 25.899986936097882,
+        "overall_pass_rate": 0.0
+      }
+    },
+    "regression_by_group": {
+      "WEG_IE3_60HZ": {
+        "ist_in": {
+          "count": 2.0,
+          "slope": 1.3585531923403893,
+          "intercept": -1.9221832684277995,
+          "r2": 1.0
+        },
+        "mst_mn": {
+          "count": 2.0,
+          "slope": 0.0,
+          "intercept": 0.6808564841554214,
+          "r2": 0.0
+        },
+        "mk_mn": {
+          "count": 2.0,
+          "slope": 0.5147888646942876,
+          "intercept": 0.4839868945794299,
+          "r2": 1.0
+        },
+        "rated_torque": {
+          "count": 2.0,
+          "slope": 0.87194080955868,
+          "intercept": 1.4666542171370418,
+          "r2": 1.0
+        },
+        "breakdown_slip": {
+          "count": 2.0,
+          "slope": 0.24949217909382507,
+          "intercept": 0.08909761462169324,
+          "r2": 1.0
+        }
+      }
+    },
+    "regression_overall": {
+      "ist_in": {
+        "count": 2.0,
+        "slope": 1.3585531923403893,
+        "intercept": -1.9221832684277995,
+        "r2": 1.0
+      },
+      "mst_mn": {
+        "count": 2.0,
+        "slope": 0.0,
+        "intercept": 0.6808564841554214,
+        "r2": 0.0
+      },
+      "mk_mn": {
+        "count": 2.0,
+        "slope": 0.5147888646942876,
+        "intercept": 0.4839868945794299,
+        "r2": 1.0
+      },
+      "rated_torque": {
+        "count": 2.0,
+        "slope": 0.87194080955868,
+        "intercept": 1.4666542171370418,
+        "r2": 1.0
+      },
+      "breakdown_slip": {
+        "count": 2.0,
+        "slope": 0.24949217909382507,
+        "intercept": 0.08909761462169324,
+        "r2": 1.0
+      }
+    },
+    "typical_curve_metrics_by_group": {
+      "WEG_IE3_60HZ": {
+        "normalized_rm": {
+          "count": 2.0,
+          "slope": 30.472606376259463,
+          "intercept": 47.896428533370816,
+          "r2": 1.0
+        },
+        "normalized_xm": {
+          "count": 2.0,
+          "slope": -34.94923072534452,
+          "intercept": 36.069921798106805,
+          "r2": 1.0
+        },
+        "normalized_x1": {
+          "count": 2.0,
+          "slope": -2.797569692942007,
+          "intercept": 2.2349868184090074,
+          "r2": 1.0
+        }
+      }
+    },
+    "skipped": [],
+    "guard_audit": {
+      "events": [],
+      "event_summary": {
+        "total_events": 0,
+        "by_action": {},
+        "by_severity": {},
+        "top_reasons": []
+      },
+      "auto_correct_count": 0,
+      "reject_count": 0
+    },
+    "overall_pass": false,
+    "timing": {
+      "total_timed_seconds": 0.047202600006130524,
+      "stages": {
+        "breakdown_search": {
+          "seconds": 0.023018199994112365,
+          "count": 2,
+          "pct_of_timed_stages": 48.764686672180844
+        },
+        "breakdown_search_evaluations": {
+          "seconds": 0.0,
+          "count": 4000,
+          "pct_of_timed_stages": 0.0
+        },
+        "group_constraints": {
+          "seconds": 1.3900003978051245e-05,
+          "count": 1,
+          "pct_of_timed_stages": 0.029447538856431546
+        },
+        "group_records": {
+          "seconds": 3.5999983083456755e-06,
+          "count": 1,
+          "pct_of_timed_stages": 0.007626694944511784
+        },
+        "group_summary": {
+          "seconds": 4.959999932907522e-05,
+          "count": 1,
+          "pct_of_timed_stages": 0.1050789560800323
+        },
+        "load_catalog_csv": {
+          "seconds": 0.0005893999914405867,
+          "count": 1,
+          "pct_of_timed_stages": 1.248660013143423
+        },
+        "physical_guards": {
+          "seconds": 8.760001219343394e-05,
+          "count": 2,
+          "pct_of_timed_stages": 0.1855830233547659
+        },
+        "report_generation": {
+          "seconds": 6.819999543949962e-05,
+          "count": 1,
+          "pct_of_timed_stages": 0.14448355690288675
+        },
+        "solver_deterministic": {
+          "seconds": 0.00010150001617148519,
+          "count": 2,
+          "pct_of_timed_stages": 0.21503056221119746
+        },
+        "validate_motor": {
+          "seconds": 0.02327059999515768,
+          "count": 2,
+          "pct_of_timed_stages": 49.29940298232591
+        }
+      },
+      "total_runtime_seconds": 0.02418259999831207
+    }
+  },
+  "legacy": {
+    "solver": "legacy",
+    "thresholds": {
+      "current_pct": 15.0,
+      "torque_pct": 15.0,
+      "efficiency_abs": 0.05,
+      "power_factor_abs": 0.05,
+      "ratio_pct": 15.0
+    },
+    "runtime_config": {
+      "legacy_solver": {
+        "breakdown_samples": 140,
+        "beta_min_tenths": 8,
+        "beta_max_tenths": 16,
+        "alpha_min_tenths": 1,
+        "alpha_max_tenths": 9,
+        "r1_steps": 12,
+        "gr_steps": 20,
+        "rm_steps": 8,
+        "xm_steps": 12
+      }
+    },
+    "results": [
+      {
+        "solver": "legacy",
+        "group_name": "WEG_IE3_60HZ",
+        "motor_id": "WEG_IE3_0p4kW_8P_220V_226",
+        "rated_power_kw": 0.37,
+        "predicted_current_a": 8.242440721087982,
+        "nominal_current_a": 2.24,
+        "error_current_pct": 267.9661036199992,
+        "pass_current": false,
+        "predicted_torque_nm": 1.0331083983152671,
+        "nominal_torque_nm": 4.20705,
+        "error_torque_pct": 75.44340099796135,
+        "pass_torque": false,
+        "predicted_efficiency": 0.05012141041945249,
+        "nominal_efficiency": 0.72,
+        "error_efficiency_abs": 0.6698785895805475,
+        "pass_efficiency": false,
+        "predicted_power_factor": 0.5771750089600458,
+        "nominal_power_factor": 0.6,
+        "error_power_factor_abs": 0.022824991039954168,
+        "pass_power_factor": true,
+        "predicted_ist_in": 4.204275359080259,
+        "nominal_ist_in": 3.4,
+        "error_ist_in_pct": 23.655157620007614,
+        "pass_ist_in": false,
+        "predicted_mst_mn": 0.30244432398846516,
+        "nominal_mst_mn": 1.7,
+        "error_mst_mn_pct": 82.20915741244322,
+        "pass_mst_mn": false,
+        "predicted_mk_mn": 0.3097697810643504,
+        "nominal_mk_mn": 2.3,
+        "error_mk_mn_pct": 86.53174864937607,
+        "pass_mk_mn": false,
+        "predicted_breakdown_slip": 0.144,
+        "nominal_breakdown_slip": 0.29220308886272056,
+        "error_breakdown_slip_pct": 50.719206781673556,
+        "pass_breakdown_slip": false,
+        "normalized_rm": 8.0,
+        "normalized_xm": 3.0,
+        "normalized_x1": 0.5967407004274491,
+        "nominal_error_pct": 171.7047523089803,
+        "start_error_pct": 52.932157516225416,
+        "breakdown_error_pct": 86.53174864937607,
+        "curve_csv_path": null,
+        "pass_overall": false
+      },
+      {
+        "solver": "legacy",
+        "group_name": "WEG_IE3_60HZ",
+        "motor_id": "WEG_IE3_0p6kW_8P_220V_227",
+        "rated_power_kw": 0.55,
+        "predicted_current_a": 10.240508445300938,
+        "nominal_current_a": 3.2,
+        "error_current_pct": 220.01588891565427,
+        "pass_current": false,
+        "predicted_torque_nm": 6.366273313807944,
+        "nominal_torque_nm": 6.1978,
+        "error_torque_pct": 2.718276062601951,
+        "pass_torque": true,
+        "predicted_efficiency": 0.2335794784519627,
+        "nominal_efficiency": 0.74,
+        "error_efficiency_abs": 0.5064205215480373,
+        "pass_efficiency": false,
+        "predicted_power_factor": 0.6198275828549091,
+        "nominal_power_factor": 0.61,
+        "error_power_factor_abs": 0.009827582854909145,
+        "pass_power_factor": true,
+        "predicted_ist_in": 4.2526321945308,
+        "nominal_ist_in": 3.5,
+        "error_ist_in_pct": 21.50377698659428,
+        "pass_ist_in": false,
+        "predicted_mst_mn": 0.9416649451583847,
+        "nominal_mst_mn": 1.7,
+        "error_mst_mn_pct": 44.607944402447956,
+        "pass_mst_mn": false,
+        "predicted_mk_mn": 1.4013784883963412,
+        "nominal_mk_mn": 2.0,
+        "error_mk_mn_pct": 29.93107558018294,
+        "pass_mk_mn": false,
+        "predicted_breakdown_slip": 0.1535,
+        "nominal_breakdown_slip": 0.21805246792063954,
+        "error_breakdown_slip_pct": 29.604098745689726,
+        "pass_breakdown_slip": false,
+        "normalized_rm": 8.0,
+        "normalized_xm": 3.0,
+        "normalized_x1": 0.4237177515565752,
+        "nominal_error_pct": 111.36708248912811,
+        "start_error_pct": 33.055860694521115,
+        "breakdown_error_pct": 29.93107558018294,
+        "curve_csv_path": null,
+        "pass_overall": false
+      }
+    ],
+    "summary_by_group": {
+      "WEG_IE3_60HZ": {
+        "motors": 2,
+        "mean_abs_current_error_pct": 243.99099626782674,
+        "mean_abs_torque_error_pct": 39.080838530281646,
+        "mean_abs_efficiency_error": 0.5881495555642924,
+        "mean_abs_pf_error": 0.016326286947431656,
+        "mean_abs_ist_in_error_pct": 22.579467303300945,
+        "mean_abs_mst_mn_error_pct": 63.40855090744559,
+        "mean_abs_mk_mn_error_pct": 58.2314121147795,
+        "mean_abs_breakdown_slip_error_pct": 40.161652763681644,
+        "mean_nominal_error_pct": 141.5359173990542,
+        "mean_start_error_pct": 42.994009105373266,
+        "mean_breakdown_error_pct": 58.2314121147795,
+        "overall_pass_rate": 0.0
+      }
+    },
+    "regression_by_group": {
+      "WEG_IE3_60HZ": {
+        "ist_in": {
+          "count": 2.0,
+          "slope": 0.4835683545054077,
+          "intercept": 2.560142953761873,
+          "r2": 1.0
+        },
+        "mst_mn": {
+          "count": 2.0,
+          "slope": 0.0,
+          "intercept": 0.6220546345734249,
+          "r2": 0.0
+        },
+        "mk_mn": {
+          "count": 2.0,
+          "slope": -3.638695691106638,
+          "intercept": 8.678769870609617,
+          "r2": 1.0
+        },
+        "rated_torque": {
+          "count": 2.0,
+          "slope": 2.6789727065139655,
+          "intercept": -10.237463726624311,
+          "r2": 1.0
+        },
+        "breakdown_slip": {
+          "count": 2.0,
+          "slope": -0.12811760548061288,
+          "intercept": 0.1814363600591305,
+          "r2": 1.0
+        }
+      }
+    },
+    "regression_overall": {
+      "ist_in": {
+        "count": 2.0,
+        "slope": 0.4835683545054077,
+        "intercept": 2.560142953761873,
+        "r2": 1.0
+      },
+      "mst_mn": {
+        "count": 2.0,
+        "slope": 0.0,
+        "intercept": 0.6220546345734249,
+        "r2": 0.0
+      },
+      "mk_mn": {
+        "count": 2.0,
+        "slope": -3.638695691106638,
+        "intercept": 8.678769870609617,
+        "r2": 1.0
+      },
+      "rated_torque": {
+        "count": 2.0,
+        "slope": 2.6789727065139655,
+        "intercept": -10.237463726624311,
+        "r2": 1.0
+      },
+      "breakdown_slip": {
+        "count": 2.0,
+        "slope": -0.12811760548061288,
+        "intercept": 0.1814363600591305,
+        "r2": 1.0
+      }
+    },
+    "typical_curve_metrics_by_group": {
+      "WEG_IE3_60HZ": {
+        "normalized_rm": {
+          "count": 2.0,
+          "slope": 0.0,
+          "intercept": 8.0,
+          "r2": 1.0
+        },
+        "normalized_xm": {
+          "count": 2.0,
+          "slope": 0.0,
+          "intercept": 3.0,
+          "r2": 1.0
+        },
+        "normalized_x1": {
+          "count": 2.0,
+          "slope": -0.961238604838188,
+          "intercept": 0.9523989842175786,
+          "r2": 1.0
+        }
+      }
+    },
+    "skipped": [],
+    "guard_audit": {
+      "events": [],
+      "event_summary": {
+        "total_events": 0,
+        "by_action": {},
+        "by_severity": {},
+        "top_reasons": []
+      },
+      "auto_correct_count": 0,
+      "reject_count": 0
+    },
+    "overall_pass": false,
+    "timing": {
+      "total_timed_seconds": 2.178426399943419,
+      "stages": {
+        "breakdown_search": {
+          "seconds": 0.722000899942941,
+          "count": 838,
+          "pct_of_timed_stages": 33.14323127748057
+        },
+        "breakdown_search_evaluations": {
+          "seconds": 0.0,
+          "count": 121040,
+          "pct_of_timed_stages": 0.0
+        },
+        "group_constraints": {
+          "seconds": 1.170000177808106e-05,
+          "count": 1,
+          "pct_of_timed_stages": 0.0005370850159723068
+        },
+        "group_records": {
+          "seconds": 2.800006768666208e-06,
+          "count": 1,
+          "pct_of_timed_stages": 0.00012853345739561976
+        },
+        "group_summary": {
+          "seconds": 5.370000144466758e-05,
+          "count": 1,
+          "pct_of_timed_stages": 0.002465082200897967
+        },
+        "load_catalog_csv": {
+          "seconds": 0.0006320999964373186,
+          "count": 1,
+          "pct_of_timed_stages": 0.02901635769993131
+        },
+        "physical_guards": {
+          "seconds": 8.229998638853431e-05,
+          "count": 2,
+          "pct_of_timed_stages": 0.0037779557937175166
+        },
+        "report_generation": {
+          "seconds": 6.910000229254365e-05,
+          "count": 1,
+          "pct_of_timed_stages": 0.003172014546570791
+        },
+        "solver_legacy": {
+          "seconds": 0.7161709000065457,
+          "count": 2,
+          "pct_of_timed_stages": 32.87560690713017
+        },
+        "validate_motor": {
+          "seconds": 0.7394028999988222,
+          "count": 2,
+          "pct_of_timed_stages": 33.94206478667478
+        }
+      },
+      "total_runtime_seconds": 0.7403445999952964
+    }
+  }
+}

@@ -12,3 +12,6 @@ scripts/__pycache__
 debug_params.txt
 catalog/converter_pdf_md.py
 .archivado/
+.gitignore
+data/partitions/
+outputs/validation_modes/

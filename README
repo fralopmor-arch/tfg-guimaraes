@@ -35,7 +35,7 @@ Comportamiento actual (simplificado):
 
 ## Extracción de datos (flujo oficial)
 
-El proyecto se ejecuta con 2 extractores manuales. No se usa runner/orquestador.
+El proyecto se puede ejecutar de forma manual (2 extractores) o con un runner unificado.
 
 1. Extractor XLS (catálogo WEG IE4):
 
@@ -59,4 +59,112 @@ Salida esperada (por defecto):
 Notas:
 - Puedes definir salida personalizada en Markdown con `--output`.
 - Ambos extractores preservan el core de 20 campos Guimarães para validación downstream.
+
+## Flujo completo en un solo comando
+
+Para correr extracción XLS + extracción Markdown + validación Guimarães en secuencia:
+
+```bash
+c:/Users/fcurr/projects/tfg_guimaraes/.venv/Scripts/python.exe scripts/run_full_flow.py --summary-only
+```
+
+Salida principal:
+- `data/catalog_weg_ie4_xls_raw_full.csv`
+- `data/catalog_weg_ie4_xls_normalized_full.csv`
+- `data/catalog_weg_w40_open_motor_p6_p15_extracted.csv`
+- `report_full_flow.json`
+
+Opciones útiles:
+- `--skip-md` para omitir la extracción Markdown.
+- `--validation-input <csv>` para validar otro dataset.
+- `--export-curves-dir outputs/curves` para exportar curvas por motor.
+
+## Particionado por grupos coherentes (nuevo)
+
+Política de datos:
+- Cada CSV de `data/` se mantiene como master de su fuente.
+- El particionado se genera por grupos coherentes del método:
+	- `manufacturer`
+	- `efficiency_class`
+	- `starting_torque_category`
+- La generación es determinista (mismo input -> mismos batches).
+
+Estructura de salida de particiones:
+- `data/partitions/<source_name>/<group_key>/<mode>/batch_<nnn>.csv`
+- Manifiesto por modo:
+	- `data/partitions/<source_name>/manifest_<mode>.json`
+
+### Construir particiones manualmente
+
+```bash
+c:/Users/fcurr/projects/tfg_guimaraes/.venv/Scripts/python.exe scripts/guimaraes/build_partitions.py --input-master data/catalog_weg_w40_open_motor_p6_p15_extracted.csv --source-name weg_w40 --mode smoke
+```
+
+Tamaños por defecto:
+- `smoke`: 8 motores por grupo (rango recomendado 5-10)
+- `fast`: 30 motores por grupo (rango recomendado 20-50)
+- `intermediate`: batches de 40 motores
+- `full`: dataset completo por grupo
+
+### Ejecutar validación por modo (wrapper)
+
+Smoke (rápido, 5-10):
+
+```bash
+c:/Users/fcurr/projects/tfg_guimaraes/.venv/Scripts/python.exe scripts/guimaraes/run_validation_modes.py --input-master data/catalog_weg_w40_open_motor_p6_p15_extracted.csv --source-name weg_w40 --mode smoke --smoke-size 8
+```
+
+Fast (subconjunto pequeño):
+
+```bash
+c:/Users/fcurr/projects/tfg_guimaraes/.venv/Scripts/python.exe scripts/guimaraes/run_validation_modes.py --input-master data/catalog_weg_w40_open_motor_p6_p15_extracted.csv --source-name weg_w40 --mode fast --fast-size 30
+```
+
+Intermediate (múltiples batches fijos):
+
+```bash
+c:/Users/fcurr/projects/tfg_guimaraes/.venv/Scripts/python.exe scripts/guimaraes/run_validation_modes.py --input-master data/catalog_weg_w40_open_motor_p6_p15_extracted.csv --source-name weg_w40 --mode intermediate --intermediate-batch-size 40
+```
+
+Full (dataset completo, recomendado en segundo plano):
+
+```bash
+Start-Process -FilePath c:/Users/fcurr/projects/tfg_guimaraes/.venv/Scripts/python.exe -ArgumentList 'scripts/guimaraes/run_validation_modes.py --input-master data/catalog_weg_w40_open_motor_p6_p15_extracted.csv --source-name weg_w40 --mode full' -NoNewWindow
+```
+
+Outputs de validación por modo:
+- Reportes por batch en `outputs/validation_modes/<source_name>/...`
+- Agregado por modo en `outputs/validation_modes/<source_name>/<mode>/aggregate_report.json`
+- Resumen global en `outputs/validation_modes/<source_name>/summary.json`
+
+## Pipeline determinista Eq.11-34 (nuevo)
+
+Este flujo prioriza calibración por bloques del paper:
+- Bloque I resistivo (Eq.11-22)
+- Bloque II reactivo (Eq.23-28)
+- Bloque III magnetizante (Eq.29-34)
+
+Incluye:
+- Guardas físicas por fila (auto-corrección o rechazo con auditoría)
+- Cohortes estrictas por fabricante, clase de eficiencia, categoría de arranque, frecuencia y pares de polos
+- Métricas de regresión (pendiente y R²) para Ist/In, Mst/Mn, Mk/Mn, par nominal y slip de ruptura
+- Comparación before/after entre solver determinista y solver legacy
+
+### Smoke reproducible
+
+```bash
+c:/Users/fcurr/projects/tfg_guimaraes/.venv/Scripts/python.exe scripts/guimaraes/run_validation_modes.py --input-master data/catalog_weg_w21_aluminium_multimounting_p9_p21_extracted.csv --source-name weg_w21 --mode smoke --smoke-size 8 --solver deterministic --reports-root outputs/validation_modes
+```
+
+### Comparación determinista vs legacy (batch)
+
+```bash
+c:/Users/fcurr/projects/tfg_guimaraes/.venv/Scripts/python.exe scripts/guimaraes/run_validation_modes.py --input-master data/catalog_weg_w21_aluminium_multimounting_p9_p21_extracted.csv --source-name weg_w21 --mode smoke --smoke-size 8 --compare-with-legacy --reports-root outputs/validation_modes
+```
+
+### Comparación directa sobre CSV (sin particionar)
+
+```bash
+c:/Users/fcurr/projects/tfg_guimaraes/.venv/Scripts/python.exe scripts/guimaraes/validate_guimaraes.py --input data/catalog_weg_w21_aluminium_multimounting_p9_p21_extracted.csv --compare-with-legacy --summary-only --output outputs/validation_modes/weg_w21/direct_compare_report.json
+```
 

@@ -579,6 +579,13 @@ def _merge_non_empty(base: Dict[str, Optional[str]], overrides: Dict[str, Option
     return merged
 
 
+def _append_warning(existing: str, warning: str) -> str:
+    current = [part.strip() for part in existing.split(";") if part.strip()]
+    if warning not in current:
+        current.append(warning)
+    return "; ".join(current)
+
+
 def _finalize_record(
     record: Dict[str, str],
     index: int,
@@ -594,11 +601,24 @@ def _finalize_record(
     out["source_file"] = source_file
     out["source_page"] = record.get("source_page", "")
 
-    if not out.get("poles", "").strip():
-        out["poles"] = _infer_poles_from_speed(
-            out.get("rated_speed_rpm", ""),
-            out.get("frequency_hz", ""),
-        )
+    parse_warnings = record.get("parse_warnings", "")
+    existing_poles = out.get("poles", "").strip()
+    inferred_poles = _infer_poles_from_speed(
+        out.get("rated_speed_rpm", ""),
+        out.get("frequency_hz", ""),
+    )
+
+    # Prefer speed-consistent poles for numeric-block extraction pages that may
+    # contain multiple pole sections under the same page context.
+    if inferred_poles:
+        if not existing_poles:
+            out["poles"] = inferred_poles
+        elif existing_poles != inferred_poles:
+            out["poles"] = inferred_poles
+            parse_warnings = _append_warning(
+                parse_warnings,
+                f"poles_corrected:{existing_poles}->{inferred_poles}",
+            )
 
     if not out.get("efficiency_class", "").strip():
         out["efficiency_class"] = default_efficiency_class.strip() or DEFAULT_EFFICIENCY_CLASS
@@ -616,7 +636,7 @@ def _finalize_record(
 
     missing = [f for f in TARGET_FIELDS if not (out.get(f) or "").strip()]
     out["missing_fields"] = ",".join(missing)
-    out["parse_warnings"] = record.get("parse_warnings", "")
+    out["parse_warnings"] = parse_warnings
     return out
 
 

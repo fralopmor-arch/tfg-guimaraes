@@ -1,0 +1,301 @@
+{
+  "solver": "deterministic",
+  "thresholds": {
+    "current_pct": 15.0,
+    "torque_pct": 15.0,
+    "efficiency_abs": 0.05,
+    "power_factor_abs": 0.05,
+    "ratio_pct": 15.0
+  },
+  "runtime_config": {
+    "legacy_solver": {
+      "breakdown_samples": 140,
+      "beta_min_tenths": 8,
+      "beta_max_tenths": 16,
+      "alpha_min_tenths": 1,
+      "alpha_max_tenths": 9,
+      "r1_steps": 12,
+      "gr_steps": 20,
+      "rm_steps": 8,
+      "xm_steps": 12
+    }
+  },
+  "results": [],
+  "summary_by_group": {
+    "WEG_IE3_50HZ": {
+      "motors": 0,
+      "mean_abs_current_error_pct": 0.0,
+      "mean_abs_torque_error_pct": 0.0,
+      "mean_abs_efficiency_error": 0.0,
+      "mean_abs_pf_error": 0.0,
+      "mean_abs_ist_in_error_pct": 0.0,
+      "mean_abs_mst_mn_error_pct": 0.0,
+      "mean_abs_mk_mn_error_pct": 0.0,
+      "mean_abs_breakdown_slip_error_pct": 0.0,
+      "mean_nominal_error_pct": 0.0,
+      "mean_start_error_pct": 0.0,
+      "mean_breakdown_error_pct": 0.0,
+      "overall_pass_rate": 0.0
+    }
+  },
+  "regression_by_group": {
+    "WEG_IE3_50HZ": {
+      "ist_in": {
+        "count": 0.0,
+        "slope": 0.0,
+        "intercept": 0.0,
+        "r2": 0.0
+      },
+      "mst_mn": {
+        "count": 0.0,
+        "slope": 0.0,
+        "intercept": 0.0,
+        "r2": 0.0
+      },
+      "mk_mn": {
+        "count": 0.0,
+        "slope": 0.0,
+        "intercept": 0.0,
+        "r2": 0.0
+      },
+      "rated_torque": {
+        "count": 0.0,
+        "slope": 0.0,
+        "intercept": 0.0,
+        "r2": 0.0
+      },
+      "breakdown_slip": {
+        "count": 0.0,
+        "slope": 0.0,
+        "intercept": 0.0,
+        "r2": 0.0
+      }
+    }
+  },
+  "regression_overall": {
+    "ist_in": {
+      "count": 0.0,
+      "slope": 0.0,
+      "intercept": 0.0,
+      "r2": 0.0
+    },
+    "mst_mn": {
+      "count": 0.0,
+      "slope": 0.0,
+      "intercept": 0.0,
+      "r2": 0.0
+    },
+    "mk_mn": {
+      "count": 0.0,
+      "slope": 0.0,
+      "intercept": 0.0,
+      "r2": 0.0
+    },
+    "rated_torque": {
+      "count": 0.0,
+      "slope": 0.0,
+      "intercept": 0.0,
+      "r2": 0.0
+    },
+    "breakdown_slip": {
+      "count": 0.0,
+      "slope": 0.0,
+      "intercept": 0.0,
+      "r2": 0.0
+    }
+  },
+  "typical_curve_metrics_by_group": {
+    "WEG_IE3_50HZ": {
+      "normalized_rm": {
+        "count": 0.0,
+        "slope": 0.0,
+        "intercept": 0.0,
+        "r2": 0.0
+      },
+      "normalized_xm": {
+        "count": 0.0,
+        "slope": 0.0,
+        "intercept": 0.0,
+        "r2": 0.0
+      },
+      "normalized_x1": {
+        "count": 0.0,
+        "slope": 0.0,
+        "intercept": 0.0,
+        "r2": 0.0
+      }
+    }
+  },
+  "skipped": [
+    {
+      "group_name": "WEG_IE3_50HZ",
+      "motor_id": "WEG_IE3_30p0kW_6P_400V_109",
+      "reason": "rejected by physical guards"
+    },
+    {
+      "group_name": "WEG_IE3_50HZ",
+      "motor_id": "WEG_IE3_355p0kW_6P_400V_115",
+      "reason": "rejected by physical guards"
+    },
+    {
+      "group_name": "WEG_IE3_50HZ",
+      "motor_id": "WEG_IE3_370p0kW_6P_400V_116",
+      "reason": "rejected by physical guards"
+    },
+    {
+      "group_name": "WEG_IE3_50HZ",
+      "motor_id": "WEG_IE3_37p0kW_6P_400V_110",
+      "reason": "rejected by physical guards"
+    },
+    {
+      "group_name": "WEG_IE3_50HZ",
+      "motor_id": "WEG_IE3_400p0kW_6P_400V_117",
+      "reason": "rejected by physical guards"
+    },
+    {
+      "group_name": "WEG_IE3_50HZ",
+      "motor_id": "WEG_IE3_45p0kW_6P_400V_111",
+      "reason": "rejected by physical guards"
+    },
+    {
+      "group_name": "WEG_IE3_50HZ",
+      "motor_id": "WEG_IE3_55p0kW_6P_400V_112",
+      "reason": "rejected by physical guards"
+    },
+    {
+      "group_name": "WEG_IE3_50HZ",
+      "motor_id": "WEG_IE3_5p5kW_6P_400V_108",
+      "reason": "rejected by physical guards"
+    }
+  ],
+  "guard_audit": {
+    "events": [
+      {
+        "motor_id": "WEG_IE3_30p0kW_6P_400V_109",
+        "severity": "error",
+        "action": "reject",
+        "field": "rated_slip",
+        "reason": "rated slip must be in (0.0005, 0.5)",
+        "old_value": "0.899613",
+        "new_value": null
+      },
+      {
+        "motor_id": "WEG_IE3_355p0kW_6P_400V_115",
+        "severity": "error",
+        "action": "reject",
+        "field": "rated_slip",
+        "reason": "rated slip must be in (0.0005, 0.5)",
+        "old_value": "0.898893",
+        "new_value": null
+      },
+      {
+        "motor_id": "WEG_IE3_370p0kW_6P_400V_116",
+        "severity": "error",
+        "action": "reject",
+        "field": "rated_slip",
+        "reason": "rated slip must be in (0.0005, 0.5)",
+        "old_value": "0.899107",
+        "new_value": null
+      },
+      {
+        "motor_id": "WEG_IE3_37p0kW_6P_400V_110",
+        "severity": "error",
+        "action": "reject",
+        "field": "rated_slip",
+        "reason": "rated slip must be in (0.0005, 0.5)",
+        "old_value": "0.899360",
+        "new_value": null
+      },
+      {
+        "motor_id": "WEG_IE3_400p0kW_6P_400V_117",
+        "severity": "error",
+        "action": "reject",
+        "field": "rated_slip",
+        "reason": "rated slip must be in (0.0005, 0.5)",
+        "old_value": "0.898909",
+        "new_value": null
+      },
+      {
+        "motor_id": "WEG_IE3_45p0kW_6P_400V_111",
+        "severity": "error",
+        "action": "reject",
+        "field": "rated_slip",
+        "reason": "rated slip must be in (0.0005, 0.5)",
+        "old_value": "0.899266",
+        "new_value": null
+      },
+      {
+        "motor_id": "WEG_IE3_55p0kW_6P_400V_112",
+        "severity": "error",
+        "action": "reject",
+        "field": "rated_slip",
+        "reason": "rated slip must be in (0.0005, 0.5)",
+        "old_value": "0.899140",
+        "new_value": null
+      },
+      {
+        "motor_id": "WEG_IE3_5p5kW_6P_400V_108",
+        "severity": "error",
+        "action": "reject",
+        "field": "rated_slip",
+        "reason": "rated slip must be in (0.0005, 0.5)",
+        "old_value": "0.901187",
+        "new_value": null
+      }
+    ],
+    "event_summary": {
+      "total_events": 8,
+      "by_action": {
+        "reject": 8
+      },
+      "by_severity": {
+        "error": 8
+      },
+      "top_reasons": [
+        {
+          "reason": "rated slip must be in (0.0005, 0.5)",
+          "count": 8
+        }
+      ]
+    },
+    "auto_correct_count": 0,
+    "reject_count": 8
+  },
+  "overall_pass": false,
+  "timing": {
+    "total_timed_seconds": 0.0016090999997686595,
+    "stages": {
+      "group_constraints": {
+        "seconds": 1.6599995433352888e-05,
+        "count": 1,
+        "pct_of_timed_stages": 1.0316323059933796
+      },
+      "group_records": {
+        "seconds": 4.299989086575806e-06,
+        "count": 1,
+        "pct_of_timed_stages": 0.26722945045019053
+      },
+      "group_summary": {
+        "seconds": 8.999995770864189e-06,
+        "count": 1,
+        "pct_of_timed_stages": 0.5593186111589161
+      },
+      "load_catalog_csv": {
+        "seconds": 0.0006029000069247559,
+        "count": 1,
+        "pct_of_timed_stages": 37.468150333194636
+      },
+      "physical_guards": {
+        "seconds": 0.0009697000059532002,
+        "count": 8,
+        "pct_of_timed_stages": 60.263501714785534
+      },
+      "report_generation": {
+        "seconds": 6.600006599910557e-06,
+        "count": 1,
+        "pct_of_timed_stages": 0.4101675844173414
+      }
+    },
+    "total_runtime_seconds": 0.0018165000074077398
+  }
+}
