@@ -23,11 +23,14 @@ try:
         LegacyRuntimeConfig,
         estimate_parameters,
         estimate_parameters_deterministic,
+        estimate_parameters_deterministic_nameplate,
         estimate_parameters_legacy,
         evaluate_vs_slip,
         normalize_for_typical_curve,
         predict_characteristic_points,
         rated_slip,
+        rotor_reactance_at_slip,
+        rotor_resistance_at_slip,
         set_performance_hook,
     )
     from scripts.guimaraes.physical_guards import apply_physical_guards
@@ -42,11 +45,14 @@ except ModuleNotFoundError:  # pragma: no cover - direct script execution
         LegacyRuntimeConfig,
         estimate_parameters,
         estimate_parameters_deterministic,
+        estimate_parameters_deterministic_nameplate,
         estimate_parameters_legacy,
         evaluate_vs_slip,
         normalize_for_typical_curve,
         predict_characteristic_points,
         rated_slip,
+        rotor_reactance_at_slip,
+        rotor_resistance_at_slip,
         set_performance_hook,
     )
     from physical_guards import apply_physical_guards
@@ -60,6 +66,18 @@ DEFAULT_POWER_FACTOR_ABS_THRESHOLD = 0.05
 DEFAULT_RATIO_PCT_THRESHOLD = 15.0
 DEFAULT_CURVE_POINTS = 300
 DEFAULT_SOLVER = "deterministic"
+DEFAULT_TYPICAL_CURVE_POINTS = 40
+
+_TYPICAL_PARAMETER_FIELDS: dict[str, str] = {
+    "normalized_r1": "r1",
+    "normalized_x1": "x1",
+    "normalized_r2": "r2",
+    "normalized_x2": "x2",
+    "normalized_r20": "r20",
+    "normalized_x20": "x20",
+    "normalized_rm": "rm",
+    "normalized_xm": "xm",
+}
 
 
 @dataclass(frozen=True)
@@ -107,6 +125,7 @@ class MotorValidationResult:
     solver: str
     group_name: str
     motor_id: str
+    has_block3_targets: bool
     rated_power_kw: float
     predicted_current_a: float
     nominal_current_a: float
@@ -140,6 +159,11 @@ class MotorValidationResult:
     nominal_breakdown_slip: float
     error_breakdown_slip_pct: float
     pass_breakdown_slip: bool
+    normalized_r1: float
+    normalized_r2: float
+    normalized_x2: float
+    normalized_r20: float
+    normalized_x20: float
     normalized_rm: float
     normalized_xm: float
     normalized_x1: float
@@ -225,7 +249,13 @@ def _nominal_breakdown_slip(record: MotorRecord) -> float:
 
 def _pick_solver(solver: str, runtime_config: ValidationRuntimeConfig):
     if solver == "deterministic":
-        return estimate_parameters_deterministic
+        return (
+            lambda record: estimate_parameters_deterministic(record)
+            if record.has_block3_targets
+            else estimate_parameters_deterministic_nameplate(record)
+        )
+    if solver == "deterministic-nameplate":
+        return estimate_parameters_deterministic_nameplate
     if solver == "legacy":
         return lambda record: estimate_parameters_legacy(record, runtime_config=runtime_config.legacy_solver)
     return lambda record: estimate_parameters(record, legacy_config=runtime_config.legacy_solver)
@@ -317,26 +347,28 @@ def _collect_regression_bundle(results: list[MotorValidationResult]) -> dict[str
             "breakdown_slip": empty,
         }
 
+    block3_rows = [row for row in results if row.has_block3_targets]
+
     return {
         "ist_in": _regression_metrics(
-            [row.nominal_ist_in for row in results],
-            [row.predicted_ist_in for row in results],
+            [row.nominal_ist_in for row in block3_rows],
+            [row.predicted_ist_in for row in block3_rows],
         ),
         "mst_mn": _regression_metrics(
-            [row.nominal_mst_mn for row in results],
-            [row.predicted_mst_mn for row in results],
+            [row.nominal_mst_mn for row in block3_rows],
+            [row.predicted_mst_mn for row in block3_rows],
         ),
         "mk_mn": _regression_metrics(
-            [row.nominal_mk_mn for row in results],
-            [row.predicted_mk_mn for row in results],
+            [row.nominal_mk_mn for row in block3_rows],
+            [row.predicted_mk_mn for row in block3_rows],
         ),
         "rated_torque": _regression_metrics(
             [row.nominal_torque_nm for row in results],
             [row.predicted_torque_nm for row in results],
         ),
         "breakdown_slip": _regression_metrics(
-            [row.nominal_breakdown_slip for row in results],
-            [row.predicted_breakdown_slip for row in results],
+            [row.nominal_breakdown_slip for row in block3_rows],
+            [row.predicted_breakdown_slip for row in block3_rows],
         ),
     }
 
@@ -344,14 +376,120 @@ def _collect_regression_bundle(results: list[MotorValidationResult]) -> dict[str
 def _collect_typical_curve_metrics(results: list[MotorValidationResult]) -> dict[str, dict[str, float]]:
     if not results:
         empty = _regression_metrics([], [])
-        return {"normalized_rm": empty, "normalized_xm": empty, "normalized_x1": empty}
+        return {field_name: empty for field_name in _TYPICAL_PARAMETER_FIELDS}
 
     powers = [row.rated_power_kw for row in results]
+    metrics: dict[str, dict[str, float]] = {}
+    for field_name in _TYPICAL_PARAMETER_FIELDS:
+        metrics[field_name] = _regression_metrics(
+            powers,
+            [float(getattr(row, field_name)) for row in results],
+        )
+    return metrics
+
+
+def _fit_power_law(xs: list[float], ys: list[float]) -> dict[str, float | bool]:
+    filtered: list[tuple[float, float]] = [
+        (x, y) for x, y in zip(xs, ys) if x > 0.0 and y > 0.0 and math.isfinite(x) and math.isfinite(y)
+    ]
+    if len(filtered) < 2:
+        return {
+            "valid": False,
+            "count": float(len(filtered)),
+            "a": 0.0,
+            "b": 0.0,
+            "r2_log": 0.0,
+        }
+
+    log_x = [math.log(item[0]) for item in filtered]
+    log_y = [math.log(item[1]) for item in filtered]
+    count = len(log_x)
+    x_mean = sum(log_x) / count
+    y_mean = sum(log_y) / count
+    den = sum((x - x_mean) ** 2 for x in log_x)
+    if den <= 1e-12:
+        slope = 0.0
+        intercept = y_mean
+    else:
+        num = sum((x - x_mean) * (y - y_mean) for x, y in zip(log_x, log_y))
+        slope = num / den
+        intercept = y_mean - (slope * x_mean)
+
+    predictions = [intercept + (slope * x) for x in log_x]
+    y_mean = sum(log_y) / len(log_y)
+    ss_res = sum((y - y_hat) ** 2 for y, y_hat in zip(log_y, predictions))
+    ss_tot = sum((y - y_mean) ** 2 for y in log_y)
+    r2_log = 1.0 if ss_tot <= 1e-12 else max(min(1.0 - (ss_res / ss_tot), 1.0), -1.0)
+
     return {
-        "normalized_rm": _regression_metrics(powers, [row.normalized_rm for row in results]),
-        "normalized_xm": _regression_metrics(powers, [row.normalized_xm for row in results]),
-        "normalized_x1": _regression_metrics(powers, [row.normalized_x1 for row in results]),
+        "valid": True,
+        "count": float(len(filtered)),
+        "a": math.exp(intercept),
+        "b": slope,
+        "r2_log": r2_log,
     }
+
+
+def _sample_power_law_curve(
+    fit: dict[str, float | bool],
+    min_power_kw: float,
+    max_power_kw: float,
+    points: int = DEFAULT_TYPICAL_CURVE_POINTS,
+) -> list[dict[str, float]]:
+    if not bool(fit.get("valid", False)):
+        return []
+
+    p_min = max(min_power_kw, 1e-6)
+    p_max = max(max_power_kw, p_min)
+    count = max(points, 2)
+    a = float(fit["a"])
+    b = float(fit["b"])
+
+    if abs(p_max - p_min) <= 1e-12:
+        y_val = a * (p_min ** b)
+        return [{"rated_power_kw": p_min, "predicted_normalized": y_val}]
+
+    samples: list[dict[str, float]] = []
+    for idx in range(count):
+        power_kw = p_min + ((p_max - p_min) * idx / (count - 1))
+        samples.append(
+            {
+                "rated_power_kw": power_kw,
+                "predicted_normalized": a * (power_kw ** b),
+            }
+        )
+    return samples
+
+
+def _collect_typical_power_laws(results: list[MotorValidationResult]) -> dict[str, dict[str, float | bool]]:
+    if not results:
+        return {
+            field_name: {"valid": False, "count": 0.0, "a": 0.0, "b": 0.0, "r2_log": 0.0}
+            for field_name in _TYPICAL_PARAMETER_FIELDS
+        }
+
+    powers = [row.rated_power_kw for row in results]
+    fits: dict[str, dict[str, float | bool]] = {}
+    for field_name in _TYPICAL_PARAMETER_FIELDS:
+        values = [float(getattr(row, field_name)) for row in results]
+        fits[field_name] = _fit_power_law(powers, values)
+    return fits
+
+
+def _collect_typical_power_law_curves(
+    results: list[MotorValidationResult],
+    fits: dict[str, dict[str, float | bool]],
+) -> dict[str, list[dict[str, float]]]:
+    if not results:
+        return {field_name: [] for field_name in _TYPICAL_PARAMETER_FIELDS}
+
+    powers = [row.rated_power_kw for row in results]
+    min_power = min(powers)
+    max_power = max(powers)
+    curves: dict[str, list[dict[str, float]]] = {}
+    for field_name, fit in fits.items():
+        curves[field_name] = _sample_power_law_curve(fit, min_power, max_power)
+    return curves
 
 
 def _validate_one_motor(
@@ -367,8 +505,7 @@ def _validate_one_motor(
     curves_output_dir: Path | None,
     curve_points: int,
 ) -> MotorValidationResult:
-    if not record.has_block3_targets:
-        raise ValueError(f"Motor {record.motor_id} does not include required Block III ratios")
+    has_block3_targets = record.has_block3_targets
 
     params = solver_fn(record)
     points = predict_characteristic_points(record, params)
@@ -383,15 +520,28 @@ def _validate_one_motor(
     predicted_mst_mn = points.start.torque_nm / record.rated_torque_nm
     predicted_mk_mn = points.breakdown.torque_nm / record.rated_torque_nm
 
-    nominal_ist_in = float(record.ist_in)
-    nominal_mst_mn = float(record.mst_mn)
-    nominal_mk_mn = float(record.mk_mn)
-    nominal_breakdown_slip = _nominal_breakdown_slip(record)
+    r2_rated = rotor_resistance_at_slip(params, params.slip_rated)
+    x2_rated = rotor_reactance_at_slip(params, params.slip_rated)
 
-    err_ist_in = _error_pct(predicted_ist_in, nominal_ist_in)
-    err_mst_mn = _error_pct(predicted_mst_mn, nominal_mst_mn)
-    err_mk_mn = _error_pct(predicted_mk_mn, nominal_mk_mn)
-    err_breakdown_slip = _error_pct(points.breakdown.slip, nominal_breakdown_slip)
+    if has_block3_targets:
+        nominal_ist_in = float(record.ist_in)
+        nominal_mst_mn = float(record.mst_mn)
+        nominal_mk_mn = float(record.mk_mn)
+        nominal_breakdown_slip = _nominal_breakdown_slip(record)
+
+        err_ist_in = _error_pct(predicted_ist_in, nominal_ist_in)
+        err_mst_mn = _error_pct(predicted_mst_mn, nominal_mst_mn)
+        err_mk_mn = _error_pct(predicted_mk_mn, nominal_mk_mn)
+        err_breakdown_slip = _error_pct(points.breakdown.slip, nominal_breakdown_slip)
+    else:
+        nominal_ist_in = predicted_ist_in
+        nominal_mst_mn = predicted_mst_mn
+        nominal_mk_mn = predicted_mk_mn
+        nominal_breakdown_slip = points.breakdown.slip
+        err_ist_in = 0.0
+        err_mst_mn = 0.0
+        err_mk_mn = 0.0
+        err_breakdown_slip = 0.0
     nominal_error_pct = 0.5 * (err_current + err_torque)
     start_error_pct = 0.5 * (err_ist_in + err_mst_mn)
     breakdown_error_pct = err_mk_mn
@@ -400,10 +550,10 @@ def _validate_one_motor(
     pass_torque = err_torque <= torque_pct_threshold
     pass_efficiency = err_eff <= efficiency_abs_threshold
     pass_power_factor = err_pf <= power_factor_abs_threshold
-    pass_ist_in = err_ist_in <= ratio_pct_threshold
-    pass_mst_mn = err_mst_mn <= ratio_pct_threshold
-    pass_mk_mn = err_mk_mn <= ratio_pct_threshold
-    pass_breakdown_slip = err_breakdown_slip <= ratio_pct_threshold
+    pass_ist_in = (err_ist_in <= ratio_pct_threshold) if has_block3_targets else True
+    pass_mst_mn = (err_mst_mn <= ratio_pct_threshold) if has_block3_targets else True
+    pass_mk_mn = (err_mk_mn <= ratio_pct_threshold) if has_block3_targets else True
+    pass_breakdown_slip = (err_breakdown_slip <= ratio_pct_threshold) if has_block3_targets else True
     pass_overall = (
         pass_current
         and pass_torque
@@ -445,6 +595,7 @@ def _validate_one_motor(
         solver=solver,
         group_name=group_name,
         motor_id=record.motor_id,
+        has_block3_targets=has_block3_targets,
         rated_power_kw=record.rated_power_w / 1000.0,
         predicted_current_a=prediction.current_a,
         nominal_current_a=record.rated_current_a,
@@ -478,6 +629,11 @@ def _validate_one_motor(
         nominal_breakdown_slip=nominal_breakdown_slip,
         error_breakdown_slip_pct=err_breakdown_slip,
         pass_breakdown_slip=pass_breakdown_slip,
+        normalized_r1=normalize_for_typical_curve(params.r1_ohm, record, "r1"),
+        normalized_r2=normalize_for_typical_curve(r2_rated, record, "r2"),
+        normalized_x2=normalize_for_typical_curve(x2_rated, record, "x2"),
+        normalized_r20=normalize_for_typical_curve(params.r2_base_ohm, record, "r20"),
+        normalized_x20=normalize_for_typical_curve(params.x2_ohm, record, "x20"),
         normalized_rm=normalize_for_typical_curve(params.rm_ohm, record, "rm"),
         normalized_xm=normalize_for_typical_curve(params.xm_ohm, record, "xm"),
         normalized_x1=normalize_for_typical_curve(params.x1_ohm, record, "x1"),
@@ -491,6 +647,8 @@ def _validate_one_motor(
 
 def _summarize_group(results: list[MotorValidationResult]) -> dict[str, Any]:
     total = len(results)
+    block3_rows = [item for item in results if item.has_block3_targets]
+    block3_total = len(block3_rows)
     if total == 0:
         return {
             "motors": 0,
@@ -513,13 +671,25 @@ def _summarize_group(results: list[MotorValidationResult]) -> dict[str, Any]:
         "mean_abs_torque_error_pct": sum(item.error_torque_pct for item in results) / total,
         "mean_abs_efficiency_error": sum(item.error_efficiency_abs for item in results) / total,
         "mean_abs_pf_error": sum(item.error_power_factor_abs for item in results) / total,
-        "mean_abs_ist_in_error_pct": sum(item.error_ist_in_pct for item in results) / total,
-        "mean_abs_mst_mn_error_pct": sum(item.error_mst_mn_pct for item in results) / total,
-        "mean_abs_mk_mn_error_pct": sum(item.error_mk_mn_pct for item in results) / total,
-        "mean_abs_breakdown_slip_error_pct": sum(item.error_breakdown_slip_pct for item in results) / total,
+        "mean_abs_ist_in_error_pct": (
+            sum(item.error_ist_in_pct for item in block3_rows) / block3_total if block3_total else 0.0
+        ),
+        "mean_abs_mst_mn_error_pct": (
+            sum(item.error_mst_mn_pct for item in block3_rows) / block3_total if block3_total else 0.0
+        ),
+        "mean_abs_mk_mn_error_pct": (
+            sum(item.error_mk_mn_pct for item in block3_rows) / block3_total if block3_total else 0.0
+        ),
+        "mean_abs_breakdown_slip_error_pct": (
+            sum(item.error_breakdown_slip_pct for item in block3_rows) / block3_total if block3_total else 0.0
+        ),
         "mean_nominal_error_pct": sum(item.nominal_error_pct for item in results) / total,
-        "mean_start_error_pct": sum(item.start_error_pct for item in results) / total,
-        "mean_breakdown_error_pct": sum(item.breakdown_error_pct for item in results) / total,
+        "mean_start_error_pct": (
+            sum(item.start_error_pct for item in block3_rows) / block3_total if block3_total else 0.0
+        ),
+        "mean_breakdown_error_pct": (
+            sum(item.breakdown_error_pct for item in block3_rows) / block3_total if block3_total else 0.0
+        ),
         "overall_pass_rate": sum(1 for item in results if item.pass_overall) / total,
     }
 
@@ -556,6 +726,8 @@ def run_validation(
     summary_by_group: dict[str, dict[str, Any]] = {}
     regression_by_group: dict[str, dict[str, dict[str, float]]] = {}
     typical_curve_metrics_by_group: dict[str, dict[str, dict[str, float]]] = {}
+    typical_power_laws_by_group: dict[str, dict[str, dict[str, float | bool]]] = {}
+    typical_power_law_curves_by_group: dict[str, dict[str, list[dict[str, float]]]] = {}
     skipped_motors: list[dict[str, str]] = []
     guard_events: list[dict[str, Any]] = []
 
@@ -566,35 +738,28 @@ def run_validation(
 
         group_results: list[MotorValidationResult] = []
         for record in group_records:
-            if not record.has_block3_targets:
-                skipped_motors.append(
-                    {
-                        "group_name": group_name,
-                        "motor_id": record.motor_id,
-                        "reason": "missing Block III columns (Ist_In, Mst_Mn, Mk_Mn)",
-                    }
-                )
-                continue
-
-            with timer.track("physical_guards"):
-                guard_result = apply_physical_guards(record)
-            guard_events.extend(asdict(item) for item in guard_result.events)
-            if not guard_result.accepted or guard_result.record is None:
-                skipped_motors.append(
-                    {
-                        "group_name": group_name,
-                        "motor_id": record.motor_id,
-                        "reason": "rejected by physical guards",
-                    }
-                )
-                continue
+            validated_record = record
+            if record.has_block3_targets:
+                with timer.track("physical_guards"):
+                    guard_result = apply_physical_guards(record)
+                guard_events.extend(asdict(item) for item in guard_result.events)
+                if not guard_result.accepted or guard_result.record is None:
+                    skipped_motors.append(
+                        {
+                            "group_name": group_name,
+                            "motor_id": record.motor_id,
+                            "reason": "rejected by physical guards",
+                        }
+                    )
+                    continue
+                validated_record = guard_result.record
 
             with timer.track("validate_motor"):
                 result = _validate_one_motor(
                     solver=solver,
                     solver_fn=solver_fn,
                     group_name=group_name,
-                    record=guard_result.record,
+                    record=validated_record,
                     current_pct_threshold=current_pct_threshold,
                     torque_pct_threshold=torque_pct_threshold,
                     efficiency_abs_threshold=efficiency_abs_threshold,
@@ -610,6 +775,11 @@ def run_validation(
             summary_by_group[group_name] = _summarize_group(group_results)
             regression_by_group[group_name] = _collect_regression_bundle(group_results)
             typical_curve_metrics_by_group[group_name] = _collect_typical_curve_metrics(group_results)
+            typical_power_laws_by_group[group_name] = _collect_typical_power_laws(group_results)
+            typical_power_law_curves_by_group[group_name] = _collect_typical_power_law_curves(
+                group_results,
+                typical_power_laws_by_group[group_name],
+            )
 
     rejected_count = sum(1 for item in skipped_motors if item["reason"] == "rejected by physical guards")
     corrected_count = sum(1 for item in guard_events if item["action"] == "auto_correct")
@@ -643,6 +813,8 @@ def run_validation(
             "regression_by_group": regression_by_group,
             "regression_overall": _collect_regression_bundle(all_results),
             "typical_curve_metrics_by_group": typical_curve_metrics_by_group,
+            "typical_power_laws_by_group": typical_power_laws_by_group,
+            "typical_power_law_curves_by_group": typical_power_law_curves_by_group,
             "skipped": skipped_motors,
             "guard_audit": {
                 "events": guard_events,
@@ -885,7 +1057,7 @@ def build_argument_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--solver",
         default=DEFAULT_SOLVER,
-        choices=["deterministic", "legacy", "auto"],
+        choices=["deterministic", "deterministic-nameplate", "legacy", "auto"],
         help="Estimator pipeline: deterministic (Eq.11-34), legacy (optimization), or auto",
     )
     parser.add_argument(
